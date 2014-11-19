@@ -1,0 +1,269 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Polish (Poland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PLK)
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+#pragma code_page(1250)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON                    "icon.ico"
+IDI_ICON1               ICON                    "icon1.ico"
+IDI_ICON2               ICON                    "icon2.ico"
+IDI_ICON3               ICON                    "icon3.ico"
+IDI_ICON4               ICON                    "icon4.ico"
+IDI_ICON0               ICON                    "icon0.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,1,2
+ PRODUCTVERSION 1,0,1,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041504b0"
+        BEGIN
+            VALUE "Comments", "Added vector container for windows handles and protection before delete last intance of application."
+            VALUE "CompanyName", "Michal Gawin"
+            VALUE "FileDescription", "VirtualDesktop"
+            VALUE "FileVersion", "1.0.1.2"
+            VALUE "InternalName", "Virtual Desktop"
+            VALUE "LegalCopyright", "Copyright © 2008"
+            VALUE "OriginalFilename", "VirtualDesktop.exe"
+            VALUE "ProductName", "Virtual Desktop"
+            VALUE "ProductVersion", "1.0.1.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x415, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_ABOUT DIALOG 300, 300, 258, 95
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,201,74,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,7,21,20
+    LTEXT           "Virtual Desktop",IDC_STATIC,108,26,49,8
+    LTEXT           "Created by Michal Gawin",IDC_STATIC,167,56,83,8
+END
+
+IDD_DIALOG_WALLPAPER DIALOG 0, 0, 186, 138
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,117,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,117,50,14
+    EDITTEXT        IDC_WALL_EDIT0,53,14,109,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Wallpaper#0:",IDC_STATIC,8,16,46,8
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH0,163,14,16,14
+    EDITTEXT        IDC_WALL_EDIT1,53,32,109,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_WALL_EDIT2,53,50,109,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_WALL_EDIT3,53,67,109,14,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_WALL_EDIT4,53,85,109,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH1,163,32,16,14
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH2,163,50,16,14
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH3,163,67,16,14
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH4,163,85,16,14
+    LTEXT           "Wallpaper#1:",IDC_STATIC,7,35,46,8
+    LTEXT           "Wallpaper#2:",IDC_STATIC,7,53,46,8
+    LTEXT           "Wallpaper#3:",IDC_STATIC,7,70,46,8
+    LTEXT           "Wallpaper#4:",IDC_STATIC,7,88,46,8
+END
+
+IDD_SELECT_PLUGIN DIALOG 0, 0, 240, 46
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,183,25,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,127,25,50,14
+    EDITTEXT        IDC_PLUGIN_EDIT,61,7,151,13,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BUTTON_SELPLUGIN,217,7,16,14
+    LTEXT           "Path to plugin:",IDC_STATIC,12,9,46,8
+END
+
+IDD_DESKTOP_MANAGER DIALOG 0, 0, 186, 254
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Desktops Manager"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,233,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,233,50,14
+    CONTROL         "Tree1",IDC_TREE,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_TRACKSELECT | WS_BORDER | WS_TABSTOP,7,7,172,217
+END
+
+IDD_DIALOG_WAIT DIALOG 0, 0, 186, 90
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Collecting data. Please wait...",IDC_STATIC,43,38,100,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_DIALOG_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 251
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_DIALOG_WALLPAPER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 131
+    END
+
+    IDD_SELECT_PLUGIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
+    END
+
+    IDD_DESKTOP_MANAGER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 247
+    END
+
+    IDD_DIALOG_WAIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_EXT_NAME            "Dynamic Load Library\\0*.dll\\0"
+    IDS_APP_NAME            "Wirtualny Pulpit"
+    IDS_APP_AUTHOR          "Micha³ Gawin"
+    IDS_DEF_DESKTOP_PREVIEW "Pulpit#%d"
+    IDS_APP_NO_NAME         "[Brak nazwy] %Xh"
+    IDS_APP_LAST_INSTANCE   "To jest ostatnia instancja aplikacji. Po jej usuniêciu stracisz dostêp do tej aplikacji.\nCzy na pewno chcesz j¹ usun¹æ?"
+    IDS_COPY                "Kopiuj"
+    IDS_CUT                 "Wytnij"
+    IDS_PASTE               "Wklej"
+    IDS_DELETE              "Usuñ"
+    IDS_ON_TOP              "Zawsze na wierzchu"
+    IDS_DESK_CONTENT_MANAGER "Zarz¹dzanie pulpitami..."
+    IDS_PLUGIN              "Wtyczka..."
+    IDS_WALLPAPERS          "Tapety..."
+    IDS_ABOUT               "O aplikacji..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_QUIT                "Zamknij"
+    IDS_APP_LAUNCHED        "Aplikacja jest ju¿ uruchomiona."
+    IDS_ERROR               "B³¹d"
+    IDS_NOT_SUPPORTED_OS    "Program nie jest wspierany przez t¹ wersjê systemu."
+    IDS_NO_DESKTOP_MANAGER  "Nie mo¿na za³adowaæ biblioteki do zarz¹dzania pulpitami."
+    IDS_NO_PLUGIN           "Nie mo¿na za³adowaæ wtyczki."
+    IDS_EXIT_QUESTION       "Czy chcesz zamkn¹æ aplikacjê?"
+END
+
+#endif    // Polish (Poland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
