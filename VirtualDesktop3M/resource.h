@@ -15,6 +15,7 @@
 #define IDD_DESKTOP_MANAGER             111
 #define IDD_DIALOG_WAIT                 112
 #define IDS_EXT_NAME                    113
+#define IDS_EXT_NAME_DLL                113
 #define IDS_APP_NAME                    114
 #define IDS_APP_AUTHOR                  115
 #define IDS_DEF_DESKTOP_PREVIEW         116
@@ -36,6 +37,7 @@
 #define IDS_NO_DESKTOP_MANAGER          132
 #define IDS_NO_PLUGIN                   133
 #define IDS_EXIT_QUESTION               134
+#define IDS_EXT_NAME_BMP                135
 #define IDC_STATIC_0                    1000
 #define IDC_STATIC_1                    1001
 #define IDC_STATIC_2                    1002

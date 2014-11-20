@@ -51,7 +51,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,2
+ FILEVERSION 1,0,1,3
  PRODUCTVERSION 1,0,1,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -67,10 +67,10 @@ BEGIN
     BEGIN
         BLOCK "041504b0"
         BEGIN
-            VALUE "Comments", "User is able to change window position."
+            VALUE "Comments", "Provide support for different number of desktops"
             VALUE "CompanyName", "Michal Gawin"
             VALUE "FileDescription", "SamplePlugin"
-            VALUE "FileVersion", "1.0.1.2"
+            VALUE "FileVersion", "1.0.1.3"
             VALUE "InternalName", "SamplePlugin"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "SamplePlugin.dll"
@@ -120,10 +120,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DEF_DESKTOP_PREVIEW "Pulpit#%d"
-    IDS_GET_OBJ_ERR         "B³¹d=%d, status=%d, i=%d, bmp.bmWidth=%d, bmp.bmHeight=%d"
-    IDS_ERROR               "B³¹d"
-    IDS_CREATE_WINDOW_ERR   "Nie mo¿na zainicjowaæ okna %s, kod b³êdu %d"
+    IDS_P_DEF_DESKTOP_PREVIEW ">%d<"
+    IDS_P_GET_OBJ_ERR       "B³¹d=%d, status=%d, i=%d, bmp.bmWidth=%d, bmp.bmHeight=%d"
+    IDS_P_ERROR             "B³¹d"
+    IDS_P_CREATE_WINDOW_ERR "Nie mo¿na zainicjowaæ okna %s, kod b³êdu %d"
 END
 
 #endif    // Polish (Poland) resources

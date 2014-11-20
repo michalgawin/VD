@@ -14,7 +14,7 @@ BOOL IsRegistryEntry (TCHAR* branch, TCHAR* key, TCHAR* subkey)
 
 	memset (path, 0, sizeof (path));
 	_tcscpy (path, branch);
-	_tcscat (path, "\\");
+	_tcscat (path, TEXT("\\"));
 	_tcscat (path, key);
 
 	if (RegOpenKeyEx (HKEY_CURRENT_USER, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -52,7 +52,7 @@ BOOL SetInRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, VOID*
 
 	memset (path, 0, sizeof (path));
 	_tcscpy (path, branch);
-	_tcscat (path, "\\");
+	_tcscat (path, TEXT("\\"));
 	_tcscat (path, key);
 	if (subkey)
 	{
@@ -62,27 +62,11 @@ BOOL SetInRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, VOID*
 	error = RegOpenKeyEx (HKEY_CURRENT_USER, path, 0, KEY_WRITE, &hKey);
 	if (error == ERROR_SUCCESS)
 	{
-		UINT s = strlen ((const char*) value);
-		CHAR szTab[MAX_PATH];
-		memset (szTab, 0, MAX_PATH);
-
-		if (IsTextUnicode (value, size, NULL))
-		{
-			WideCharToMultiByte (CP_ACP,
-								 0,
-								 (WCHAR*) value,
-								 -1,
-								 szTab,
-								 MAX_PATH,
-								 NULL,
-								 NULL);
-		}
-		else
-		{
-			strcpy (szTab, (const char*) value);
-		}
-
-		error = RegSetValueEx (hKey, name, 0, REG_SZ, (const BYTE*)szTab, s);
+		TCHAR szAscii[MAX_PATH];
+		memset (szAscii, 0, sizeof (szAscii));
+		
+		DWORD cbLength = _tcslen((TCHAR*) value) * sizeof (TCHAR);
+		error = RegSetValueEx (hKey, name, 0, REG_SZ, (const BYTE*) value, cbLength);
 		if (error == ERROR_SUCCESS)
 		{
 			status = TRUE;
@@ -106,7 +90,7 @@ BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCH
 
 	memset (path, 0, sizeof (path));
 	_tcscpy (path, branch);
-	_tcscat (path, "\\");
+	_tcscat (path, TEXT("\\"));
 	_tcscat (path, key);
 	if (subkey)
 	{
@@ -123,7 +107,7 @@ BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCH
 		if (IsTextUnicode (value, size, NULL))
 		{
 			WCHAR wszVal[MAX_PATH];
-			memset (wszVal, 0, MAX_PATH * sizeof (wszVal[0]));
+			memset (wszVal, 0, sizeof (wszVal));
 
 			MultiByteToWideChar (CP_ACP,
 								 0,

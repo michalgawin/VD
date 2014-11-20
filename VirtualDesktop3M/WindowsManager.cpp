@@ -68,7 +68,7 @@ VOID DrawTree (HWND hTree)
 		LoadString (hInstance, IDS_DEF_DESKTOP_PREVIEW, (TCHAR*) szDesktopNum, sizeof (szDesktopNum));
 
 		TCHAR szBuffer[MAX_PATH];
-		memset (szBuffer, 0, sizeof (MAX_PATH));
+		memset (szBuffer, 0, sizeof (szBuffer));
 		_stprintf (szBuffer, szDesktopNum, i);
 
 		tvi.mask = TVIF_TEXT;
@@ -85,7 +85,7 @@ VOID DrawTree (HWND hTree)
 				continue;
 			}
 
-			memset (szBuffer, 0, sizeof (MAX_PATH));
+			memset (szBuffer, 0, sizeof (szBuffer));
 			int len = 0;
 
 			len = GetWindowText (*itor, szBuffer, MAX_PATH);
@@ -95,7 +95,7 @@ VOID DrawTree (HWND hTree)
 				TCHAR szAppNoName[MAX_PATH];
 				LoadString (hInstance, IDS_APP_NO_NAME, (TCHAR*) szAppNoName, sizeof (szAppNoName));
 
-				memset (szBuffer, 0, sizeof (MAX_PATH));
+				memset (szBuffer, 0, sizeof (szBuffer));
 				_stprintf (szBuffer, szAppNoName, (DWORD) *itor);
 			}
 

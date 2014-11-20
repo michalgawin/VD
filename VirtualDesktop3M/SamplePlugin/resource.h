@@ -2,11 +2,11 @@
 // Microsoft Visual C++ generated include file.
 // Used by SamplePlugin.rc
 //
-#define IDS_DEF_DESKTOP_PREVIEW         101
-#define IDS_GET_OBJ_ERR                 102
-#define IDS_ERROR                       103
-#define IDS_INIT_ERR                    104
-#define IDS_CREATE_WINDOW_ERR           104
+
+#define IDS_P_DEF_DESKTOP_PREVIEW       101
+#define IDS_P_GET_OBJ_ERR               102
+#define IDS_P_ERROR                     103
+#define IDS_P_CREATE_WINDOW_ERR         104
 #define IDD_DIALOG_TRANSPARENT          108
 #define IDC_STATIC_0                    1000
 #define IDC_STATIC_1                    1001

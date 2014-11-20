@@ -14,8 +14,11 @@
 
 #define ID_TIMER    1
 
-#define WIDE_RATIO	8
-#define HIGH_RATIO	3
+#define WIDE_RATIO	8	//ratio of window to the screen
+#define HIGH_RATIO	3	//ratio of window to the screen
+
+#define BUTTON_ID0	10000	//id of first desktop-button
+#define DESKTOPS_ON_PAGE	5	//no. of desktop-buttons on page
 
 static HINSTANCE hPlugin = NULL;
 
@@ -52,7 +55,6 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static INT cxImage = 0;									// width of bitmap
 	static INT cyImage = 0;									// height of bitmap
-	static INT const iButtonID[] = {10000, 10001, 10002, 10003, 10004};
 	static HBITMAP hBmp[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// obtain image of each desktop
 	static HWND hButton[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// desktops' buttons
 	static WINDOWPOS properties;
@@ -97,53 +99,53 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 		HDC wndDC = GetWindowDC (properties.hwnd);
 		cxImage = properties.cx;
-		cyImage = properties.cy / DESKTOPS;
+		cyImage = properties.cy / DESKTOPS_ON_PAGE;
 
 		for (unsigned int i = 0; i < DESKTOPS; i++)
 		{
 			TCHAR szButtonName[MAX_PATH];
-			memset (szButtonName, 0, MAX_PATH);
+			memset (szButtonName, 0, sizeof (szButtonName));
 			_stprintf (szButtonName, TEXT("#%d"), i);
 
-			hButton[i] = CreateWindow (TEXT("button"), TEXT (szButtonName),
+			hButton[i] = CreateWindow (TEXT("button"), szButtonName,
 										WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | WS_BORDER,
 										0, cyImage*i, properties.cx, cyImage,
-										properties.hwnd, (HMENU) iButtonID[i], hInstance, NULL);
+										properties.hwnd, (HMENU) (BUTTON_ID0+i), hInstance, NULL);
 			if (hButton[i] == NULL)
 			{
 				DWORD err = GetLastError();
 
 				TCHAR szError[MAX_PATH];
-				LoadString (hInstance, IDS_ERROR, (TCHAR*) szError, sizeof (szError));
+				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
 
 				TCHAR szCreateWindowError[MAX_PATH];
-				LoadString (hInstance, IDS_CREATE_WINDOW_ERR, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError));
+				LoadString (hInstance, IDS_P_CREATE_WINDOW_ERR, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError) / sizeof (TCHAR));
 
 				TCHAR szMsg[MAX_PATH];
-				memset (szMsg, 0, MAX_PATH);
-				_stprintf (szMsg, TEXT(szCreateWindowError), TEXT(szButtonName), err);
+				memset (szMsg, 0, sizeof (szMsg));
+				_stprintf (szMsg, szCreateWindowError, szButtonName, err);
 
-				MessageBox(NULL, TEXT(szMsg), TEXT(szError), MB_OK);
+				MessageBox(NULL, szMsg, szError, MB_OK);
 			}
 
 			HDC btnDC = GetWindowDC (hButton[i]);
 			if (hBmp[i] == NULL)
 			{
 				TCHAR szDefDesktopPreview[MAX_PATH];
-				LoadString (hInstance, IDS_DEF_DESKTOP_PREVIEW, (TCHAR*) szDefDesktopPreview, sizeof (szDefDesktopPreview));
+				LoadString (hInstance, IDS_P_DEF_DESKTOP_PREVIEW, (TCHAR*) szDefDesktopPreview, sizeof (szDefDesktopPreview) / sizeof (TCHAR));
 
 				TCHAR szDesktop[MAX_PATH];
 				memset (szDesktop, 0, sizeof (szDesktop));
-				_stprintf (szDesktop, TEXT(szDefDesktopPreview), i);
+				_stprintf (szDesktop, szDefDesktopPreview, i);
 
 				SIZE size;
-				GetTextExtentPoint32 (btnDC, TEXT(szDesktop), _tcslen(TEXT(szDesktop)), &size);
+				GetTextExtentPoint32 (btnDC, szDesktop, _tcslen(szDesktop), &size);
 
 				HDC memDC = CreateCompatibleDC (btnDC);
 				hBmp[i] = CreateCompatibleBitmap (btnDC, size.cx, size.cy);
 
 				HDC oldMemDC = (HDC)SelectObject (memDC, hBmp[i]);
-				TextOut (memDC, 0, 0, TEXT(szDesktop), _tcslen(TEXT(szDesktop)));
+				TextOut (memDC, 0, 0, szDesktop, _tcslen(szDesktop));
 				SelectObject (memDC, oldMemDC);
 
 				DeleteDC (memDC);
@@ -162,7 +164,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		si.cbSize = sizeof(si);
 		si.fMask = SIF_RANGE | SIF_PAGE;
 		si.nMin = 0;
-		si.nMax = properties.cy;
+		si.nMax = cyImage * max(DESKTOPS, DESKTOPS_ON_PAGE);
 		si.nPage = rc.bottom - rc.top;
 		SetScrollInfo (properties.hwnd, SB_VERT, &si, TRUE);
 		
@@ -224,28 +226,21 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return TRUE;
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
 		{
-		case IDCANCEL:
-			DestroyWindow (properties.hwnd);
-			break;
-		case IDOK:
-			break;
-		case 10000:	//Desktop0
-		case 10001:
-		case 10002:
-		case 10003:
-		case 10004:	//Desktop4
-			{
-				INT currDskID = GetCurrentDesktop ();
-				INT dskID = wParam - 10000;
+		UINT id = LOWORD(wParam);
 
-				if (currDskID == dskID)	//do not change desktop
-				{
-					break;
-				}
-				
-				//Save screen before change desktop
+		if (id == IDCANCEL)
+		{
+			DestroyWindow (properties.hwnd);
+		}
+		else if ((id >= BUTTON_ID0) && (id < (BUTTON_ID0+DESKTOPS)))
+		{
+			INT currDskID = GetCurrentDesktop ();
+			INT dskID = wParam - 10000;
+
+			if (currDskID != dskID)
+			{
+				//Save screen before switch desktop
 				HDC dcDesktop = GetWindowDC (NULL);
 
 				HDC memDC = CreateCompatibleDC (dcDesktop);
@@ -265,14 +260,15 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 				ChangeDesktop (dskID);
 			}
-			break;
+		}
 		}
 		return TRUE;
 	case WM_DRAWITEM:
 		{
 		LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT) lParam;
 
-		INT bmpID = abs((int)(pdis->CtlID - iButtonID[0]));
+		INT bmpID = abs((int)(pdis->CtlID - BUTTON_ID0));
+
 		if (bmpID < DESKTOPS)
 		{
 			INT currDskID = GetCurrentDesktop ();
@@ -283,15 +279,15 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			if (!status)
 			{
 				TCHAR szGetObjectError[MAX_PATH];
-				LoadString (hInstance, IDS_GET_OBJ_ERR, (TCHAR*) szGetObjectError, sizeof (szGetObjectError));
+				LoadString (hInstance, IDS_P_GET_OBJ_ERR, (TCHAR*) szGetObjectError, sizeof (szGetObjectError) / sizeof (TCHAR));
 
 				TCHAR szError[MAX_PATH];
-				LoadString (hInstance, IDS_ERROR, (TCHAR*) szError, sizeof (szError));
+				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
 
 				TCHAR szMsg[MAX_PATH];
-				memset (szMsg, 0, MAX_PATH);
+				memset (szMsg, 0, sizeof (szMsg));
 				_stprintf (szMsg, szGetObjectError, GetLastError(), status, bmpID, bmp.bmWidth, bmp.bmHeight);
-				MessageBox (NULL, TEXT(szMsg), TEXT(szError), MB_OK);
+				MessageBox (NULL, szMsg, szError, MB_OK);
 			}
 			else
 			{
@@ -318,7 +314,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 					oldMemDC = (HDC)SelectObject (memDC, hBmp[bmpID]);
 				}
 		
-				StretchBlt (pdis->hDC, 0, 0, cxImage, cyImage, memDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);//MERGECOPY
+				StretchBlt (pdis->hDC, 0, 0, cxImage, cyImage, memDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
 				SelectObject (memDC, oldMemDC);
 				DeleteDC (memDC);

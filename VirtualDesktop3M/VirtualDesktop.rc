@@ -224,7 +224,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EXT_NAME            "Dynamic Load Library\\0*.dll\\0"
+    IDS_EXT_NAME_DLL        "Biblioteka Dynamiczna (*.dll)"
     IDS_APP_NAME            "Wirtualny Pulpit"
     IDS_APP_AUTHOR          "Micha³ Gawin"
     IDS_DEF_DESKTOP_PREVIEW "Pulpit#%d"
@@ -250,6 +250,7 @@ BEGIN
     IDS_NO_DESKTOP_MANAGER  "Nie mo¿na za³adowaæ biblioteki do zarz¹dzania pulpitami."
     IDS_NO_PLUGIN           "Nie mo¿na za³adowaæ wtyczki."
     IDS_EXIT_QUESTION       "Czy chcesz zamkn¹æ aplikacjê?"
+    IDS_EXT_NAME_BMP        "Mapa bitowa (*.bmp)"
 END
 
 #endif    // Polish (Poland) resources

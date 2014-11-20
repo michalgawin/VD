@@ -31,7 +31,7 @@ BOOL FreePlugin (HINSTANCE hPlug)
 }
 
 
-VOID* LoadPluginFunc (HINSTANCE hPlug, const TCHAR const * szFunc)
+VOID* LoadPluginFunc (HINSTANCE hPlug, const char const * szFunc)
 {
 	VOID* PluginFunc = NULL;
 
@@ -84,20 +84,19 @@ BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	{
 	case WM_INITDIALOG:
 		{
-		RECT rc;
-
 		hInstance = (HINSTANCE) GetWindowLong (hDlg, GWL_HINSTANCE);
 
+		RECT rc;
 		GetWindowRect (hDlg, &rc);
 		cxScreen = GetSystemMetrics (SM_CXSCREEN);
 		cyScreen = GetSystemMetrics (SM_CYSCREEN);
 
 		SetWindowPos (hDlg,
-					  NULL,							// ignored by SWP_NOZORDER
+					  NULL,
 					  (cxScreen-(rc.right-rc.left)) / 2,
 					  (cyScreen-(rc.bottom-rc.top)) / 2,
-					  0,							// ignored by SWP_NOSIZE
-					  0,							// ignored by SWP_NOSIZE
+					  0,
+					  0,
 					  SWP_NOZORDER | SWP_NOSIZE);
 
 		SetWindowText (GetDlgItem (hDlg, IDC_PLUGIN_EDIT), pluginGUI.szPluginPath);
@@ -127,10 +126,10 @@ BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			return TRUE;
 		case IDC_BUTTON_SELPLUGIN:
 			{
-			/*
 			TCHAR ext_name[MAX_PATH];
-			LoadString (hInstance, IDS_EXT_NAME, (TCHAR*)ext_name, sizeof (ext_name));
-			*/
+			memset (ext_name, 0, sizeof (ext_name));
+			LoadString (hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, sizeof (ext_name) / sizeof (TCHAR));
+			_tcscat (ext_name+_tcslen(ext_name)+1, TEXT("*.dll"));
 
 			OPENFILENAME ofn;
 			TCHAR szFile[MAX_PATH];
@@ -140,8 +139,8 @@ BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			ofn.hwndOwner = hDlg;
 			ofn.lpstrFile = szFile;
 			ofn.lpstrFile[0] = TEXT('\0');
-			ofn.nMaxFile = sizeof(szFile);
-			ofn.lpstrFilter = TEXT("Dynamic Load Library\0*.dll\0");
+			ofn.nMaxFile = sizeof(szFile) / sizeof(TCHAR);
+			ofn.lpstrFilter = ext_name;
 			ofn.nFilterIndex = 1;
 			ofn.lpstrFileTitle = NULL;
 			ofn.nMaxFileTitle = 0;

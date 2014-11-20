@@ -205,9 +205,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static BOOL check = TRUE;						// hold status of check field "Always on top"
 	static CTray* tray = NULL;
 
-	TCHAR szDesktopName[16];													// string which is use to create bitmap
-	TCHAR szDefaultPluginName[] = TEXT("SamplePlugin.dll");						// default plugin name
-
+	TCHAR szWallpaper[MAX_PATH];							// string which is use to create bitmap
+	TCHAR szWallpaperTemplate[] = TEXT("Wallpaper#%d");		// wallpaper name template
+	TCHAR szDefaultPluginName[] = TEXT("SamplePlugin.dll");	// default plugin name
 
 	switch (uMsg)
 	{
@@ -215,12 +215,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		hInstance = ((LPCREATESTRUCT) lParam)->hInstance;
 
-		memset (szOrginalWallpaper, 0, MAX_PATH * sizeof (TCHAR));
+		memset (szOrginalWallpaper, 0, sizeof (szOrginalWallpaper));
 		SystemParametersInfo (SPI_GETDESKWALLPAPER, MAX_PATH, szOrginalWallpaper, 0);
 
 		for (int i = 0; i < DESKTOPS; i++)
 		{
-			windowsOnDesktop[i].szWallpaper = new char[MAX_PATH];
+			windowsOnDesktop[i].szWallpaper = new TCHAR[MAX_PATH];
 			memset (windowsOnDesktop[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
 		}
 
@@ -228,41 +228,41 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			for (int i = 0; i < DESKTOPS; i++)
 			{
-				memset (szDesktopName, 0, sizeof (szDesktopName));
-				_stprintf (szDesktopName, "Desktop #%d", i);
+				memset (szWallpaper, 0, sizeof (szWallpaper));
+				_stprintf (szWallpaper, szWallpaperTemplate, i);
 
 				SystemParametersInfo (SPI_GETDESKWALLPAPER, MAX_PATH, windowsOnDesktop[i].szWallpaper, 0);
-				SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szDesktopName, (VOID*) windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
+				SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, (VOID*) windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
 			}
 
 			SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*) szDefaultPluginName, _tcslen(szDefaultPluginName));
-			strcpy (pluginGUI.szPluginPath, szDefaultPluginName);	// Set plugin path
+			_tcscpy (pluginGUI.szPluginPath, szDefaultPluginName);	// Set plugin path
 		}
 		else	// configuration already exists in registry 
 		{
 			for (int i = 0; i < DESKTOPS; i++)
 			{
-				memset (szDesktopName, 0, sizeof (szDesktopName));
-				_stprintf (szDesktopName, "Desktop #%d", i);
+				memset (szWallpaper, 0, sizeof (szWallpaper));
+				_stprintf (szWallpaper, szWallpaperTemplate, i);
 
-				if (!GetFromRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szDesktopName, windowsOnDesktop[i].szWallpaper, MAX_PATH))
+				if (!GetFromRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, windowsOnDesktop[i].szWallpaper, MAX_PATH))
 				{
 					SystemParametersInfo (SPI_GETDESKWALLPAPER, MAX_PATH, windowsOnDesktop[i].szWallpaper, 0);
 				}
 			}
 
-			TCHAR DllPath[MAX_PATH];
-			memset (DllPath, 0, sizeof (MAX_PATH));
+			TCHAR szDllPath[MAX_PATH];
+			memset (szDllPath, 0, sizeof (szDllPath));
 
-			GetFromRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, DllPath, MAX_PATH);
-			strcpy (pluginGUI.szPluginPath, DllPath);	// Set plugin path
+			GetFromRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, szDllPath, MAX_PATH);
+			_tcscpy (pluginGUI.szPluginPath, szDllPath);	// Set plugin path
 			if (_tcslen (windowsOnDesktop[0].szWallpaper) > 0)
 			{
 				SystemParametersInfo (SPI_SETDESKWALLPAPER, _tcslen (windowsOnDesktop[0].szWallpaper), windowsOnDesktop[0].szWallpaper, 0);
 			}
 		}
 
-		shared_Dll = LoadPlugin (TEXT(DESKTOP_MGR_SZ));	// load shared library
+		shared_Dll = LoadPlugin (DESKTOP_MGR_SZ);	// load shared library
 		if (!shared_Dll)
 		{
 			TCHAR szAppName[MAX_PATH];
@@ -452,10 +452,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		for (int i = 0; i < DESKTOPS; i++)
 		{
-			memset (szDesktopName, 0, sizeof (szDesktopName));
-			_stprintf (szDesktopName, "Desktop #%d", i);
+			memset (szWallpaper, 0, sizeof (szWallpaper));
+			_stprintf (szWallpaper, szWallpaperTemplate, i);
 
-			SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szDesktopName, (VOID*) windowsOnDesktop[i].szWallpaper, _tcslen (windowsOnDesktop[i].szWallpaper));
+			SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, (VOID*) windowsOnDesktop[i].szWallpaper, _tcslen (windowsOnDesktop[i].szWallpaper));
 		}
 		//Save plugin path in registry
 		SetInRegistry (TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*) pluginGUI.szPluginPath, _tcslen (pluginGUI.szPluginPath));

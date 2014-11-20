@@ -8,8 +8,8 @@
 
 #include "VirtualDesktop.h"
 
-const TCHAR ExFunNameMakeDialog[] = TEXT("_MakeDialog@8");
-const TCHAR ExFunNameCloseDialog[] = TEXT("_CloseDialog@4");
+const char ExFunNameMakeDialog[] = "_MakeDialog@8";
+const char ExFunNameCloseDialog[] = "_CloseDialog@4";
 
 /** Pointer on function which open plugin
  * @return void
@@ -57,7 +57,7 @@ HINSTANCE LoadPlugin (TCHAR* szDll);
  * @param hPlug handle to dll library
  * @param fun_name name of loaded function
  */
-VOID* LoadPluginFunc (HINSTANCE hPlug, const TCHAR const * szFunc);
+VOID* LoadPluginFunc (HINSTANCE hPlug, const char const * szFunc);
 
 /**
  * Function free resources of loaded plugin

@@ -23,8 +23,8 @@ INT GetWindowsFromDesktop (HWND hApp, HWND hPlug, vHandle& table)
 		return table.size();
 	}
 
-	hTaskBar = FindWindowEx (NULL, NULL, "Shell_TrayWnd", NULL);
-	hDesktopIcon = FindWindowEx (NULL, NULL, "Progman", NULL);
+	hTaskBar = FindWindowEx (NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
+	hDesktopIcon = FindWindowEx (NULL, NULL, TEXT("Progman"), NULL);
 
 	do
 	{

@@ -8,7 +8,7 @@
 
 BOOL CALLBACK DlgWallpaperProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	RECT rc;
+	static HINSTANCE hInstance;
 	static INT cxScreen;
 	static INT cyScreen;
 	static pWindowsOnDesktop pWOD = NULL;
@@ -19,16 +19,19 @@ BOOL CALLBACK DlgWallpaperProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		{
 		pWOD = (pWindowsOnDesktop) lParam;
 
+		hInstance = (HINSTANCE) GetWindowLong (hDlg, GWL_HINSTANCE);
+
+		RECT rc;
 		GetWindowRect (hDlg, &rc);
 		cxScreen = GetSystemMetrics (SM_CXSCREEN);
 		cyScreen = GetSystemMetrics (SM_CYSCREEN);
 
 		SetWindowPos (hDlg,
-					  NULL,							// ignored by SWP_NOZORDER
+					  NULL,
 					  (cxScreen-(rc.right-rc.left)) / 2,
 					  (cyScreen-(rc.bottom-rc.top)) / 2,
-					  0,					// ignored by SWP_NOSIZE
-					  0,					// ignored by SWP_NOSIZE
+					  0,
+					  0,
 					  SWP_NOZORDER | SWP_NOSIZE);
 
 		//WARNING!!! Work only if edit fields in resources are in ascending sequence!
@@ -69,16 +72,21 @@ BOOL CALLBACK DlgWallpaperProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case IDC_BUTTON_SEARCH3:
 		case IDC_BUTTON_SEARCH4:
 			{
+			TCHAR ext_name[MAX_PATH];
+			memset (ext_name, 0, sizeof (ext_name));
+			LoadString (hInstance, IDS_EXT_NAME_BMP, (TCHAR*)ext_name, sizeof (ext_name) / sizeof (TCHAR));
+			_tcscat (ext_name+_tcslen(ext_name)+1, TEXT("*.bmp"));
+
 			OPENFILENAME ofn;
-			char szFile[MAX_PATH];
+			TCHAR szFile[MAX_PATH];
 
 			ZeroMemory(&ofn, sizeof(ofn));
 			ofn.lStructSize = sizeof(ofn);
 			ofn.hwndOwner = hDlg;
 			ofn.lpstrFile = szFile;
-			ofn.lpstrFile[0] = '\0';
-			ofn.nMaxFile = sizeof(szFile);
-			ofn.lpstrFilter = "Bitmap files\0*.bmp\0";
+			ofn.lpstrFile[0] = TEXT('\0');
+			ofn.nMaxFile = sizeof(szFile) / sizeof(TCHAR);
+			ofn.lpstrFilter = ext_name;
 			ofn.nFilterIndex = 1;
 			ofn.lpstrFileTitle = NULL;
 			ofn.nMaxFileTitle = 0;
