@@ -246,11 +246,14 @@ BEGIN
     IDS_QUIT                "Zamknij"
     IDS_APP_LAUNCHED        "Aplikacja jest ju¿ uruchomiona."
     IDS_ERROR               "B³¹d"
-    IDS_NOT_SUPPORTED_OS    "Program nie jest wspierany przez t¹ wersjê systemu."
-    IDS_NO_DESKTOP_MANAGER  "Nie mo¿na za³adowaæ biblioteki do zarz¹dzania pulpitami."
-    IDS_NO_PLUGIN           "Nie mo¿na za³adowaæ wtyczki."
+    IDS_ERR_NOT_SUPPORTED_OS 
+                            "Program nie jest wspierany przez t¹ wersjê systemu."
+    IDS_ERR_NO_DESKTOP_MANAGER 
+                            "Nie mo¿na za³adowaæ biblioteki do zarz¹dzania pulpitami."
+    IDS_ERR_NO_PLUGIN       "Nie mo¿na za³adowaæ wtyczki."
     IDS_EXIT_QUESTION       "Czy chcesz zamkn¹æ aplikacjê?"
     IDS_EXT_NAME_BMP        "Mapa bitowa (*.bmp)"
+    IDS_ERR_POPUP_MENU      "Nie mo¿na stworzyæ kontekstowego menu: %d."
 END
 
 #endif    // Polish (Poland) resources

@@ -6,6 +6,7 @@
 #ifndef _WINDOWS_MANAGER_H_VD_
 #define _WINDOWS_MANAGER_H_VD_
 
+#pragma comment(lib, "Comctl32.lib")
 
 #include "VirtualDesktop.h"
 #include <commctrl.h>
