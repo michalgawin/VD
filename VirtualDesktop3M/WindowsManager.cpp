@@ -15,7 +15,7 @@ static pWindowsOnDesktop pWOD = NULL;
 static HINSTANCE hInstance;
 
 
-VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL paste, BOOL del)
+VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
 {
 	static HMENU menu = NULL;
 	hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);
@@ -52,12 +52,12 @@ VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL paste, BOOL del)
 		LoadString(hInstance, IDS_COPY, (TCHAR*)szCopy, sizeof(szCopy) / sizeof(TCHAR));
 
 		AppendMenu(menu, copy ? flag : flag | MF_GRAYED, CMD_TREE_COPY, (LPCTSTR)szCopy);
-		/*
+		
 		TCHAR szCut[MAX_PATH];
 		LoadString (hInstance, IDS_CUT, (TCHAR*) szCut, sizeof(szCut) / sizeof(TCHAR));
 
 		AppendMenu (menu, cut ? flag : flag | MF_GRAYED, CMD_TREE_CUT, (LPCTSTR) szCut);
-		*/
+		
 		TCHAR szPaste[MAX_PATH];
 		LoadString(hInstance, IDS_PASTE, (TCHAR*)szPaste, sizeof(szPaste) / sizeof(TCHAR));
 
@@ -161,6 +161,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 {
 	static HWND	hTree = NULL;
 	static HWND hCopy = NULL;				//handle to window to copy
+	static BOOL bCut = FALSE;
 	static HWND hDelete = NULL;				//handle to window to remove
 	static HTREEITEM htiDrag = NULL;		//refers to dragged item in TreeView
 	static HTREEITEM htiSelected = NULL;	//refers to selected item in TreeView
@@ -252,6 +253,10 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 					   switch (LOWORD(wParam))
 					   {
+					   case CMD_TREE_CUT:
+					   {
+											bCut = TRUE;
+					   }
 					   case CMD_TREE_COPY:
 					   {
 											 if (TreeView_GetSelection(hTree) && htiSelected)
@@ -298,8 +303,14 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 												  if (!FindItem(hTree, (HWND)tvi.lParam, tvis.hParent))
 												  {
 													  TreeView_InsertItem(hTree, &tvis);
-													  return TRUE;
+
+													  if (bCut)
+													  {
+														  TreeView_DeleteItem(hTree, htiCopy);
+														  hDelete = (HWND)hCopy;
+													  }
 												  }
+												  bCut = FALSE;
 											  }
 											  return TRUE;
 					   }
@@ -425,11 +436,11 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 										if (!TreeView_GetParent(hTree, hCurrentItem))
 										{
-											ShowPopupMenu(hDlg, FALSE, (BOOL)hCopy, FALSE);
+											ShowPopupMenu(hDlg, FALSE, FALSE, (BOOL)hCopy, FALSE);
 										}
 										else
 										{
-											ShowPopupMenu(hDlg, TRUE, (BOOL)hCopy, TRUE);
+											ShowPopupMenu(hDlg, TRUE, TRUE, (BOOL)hCopy, TRUE);
 										}
 										return TRUE;
 					  }
@@ -439,8 +450,32 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 										  {
 										  case VK_DELETE:
 										  {
-															SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_DELETE, 0), 0);
-															break;
+														SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_DELETE, 0), 0);
+														break;
+										  }
+										  case 'C':
+										  {
+													  if (GetKeyState(VK_CONTROL))
+													  {
+														  SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_COPY, 0), 0);
+													  }
+													  break;
+										  }
+										  case 'X':
+										  {
+													  if (GetKeyState(VK_CONTROL))
+													  {
+														  SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_CUT, 0), 0);
+													  }
+													  break;
+										  }
+										  case 'V':
+										  {
+													  if (GetKeyState(VK_CONTROL))
+													  {
+														  SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_PASTE, 0), 0);
+													  }
+													  break;
 										  }
 										  }
 										  return TRUE;
