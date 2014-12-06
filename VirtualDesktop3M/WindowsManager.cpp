@@ -12,14 +12,13 @@
 
 
 static pWindowsOnDesktop pWOD = NULL;
-static HINSTANCE hInstance;
 
 
-VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
+VOID ShowPopupMenu(POINT point,HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
 {
 	static HMENU menu = NULL;
-	hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);
-	POINT mouse;
+
+	HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE);
 
 	if (menu)
 	{
@@ -68,9 +67,8 @@ VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
 
 		AppendMenu(menu, del ? flag : flag | MF_GRAYED, CMD_TREE_DELETE, (LPCTSTR)szDelete);
 
-		GetCursorPos(&mouse);
 		SetForegroundWindow(hwnd);
-		TrackPopupMenu(menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, mouse.x, mouse.y, 0, hwnd, 0);
+		TrackPopupMenu(menu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, point.x, point.y, 0, hwnd, 0);
 		PostMessage(hwnd, WM_NULL, 0, 0);
 	}
 }
@@ -78,8 +76,30 @@ VOID ShowPopupMenu(HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
 
 VOID DrawTree(HWND hTree)
 {
-	TVITEM		tvi;
-	TVINSERTSTRUCT	tvis;
+	HIMAGELIST himl;
+	HBITMAP hBmp;
+	BITMAP bmp;
+	INT g_nAppUp = -1;
+	INT g_nAppDown = -1;
+	
+	HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hTree, GWL_HINSTANCE);
+
+	hBmp = LoadBitmap(NULL, MAKEINTRESOURCE(OBM_ZOOM));
+	if (hBmp)
+	{
+		INT status = GetObject(hBmp, sizeof (BITMAP), &bmp);
+		himl = ImageList_Create(bmp.bmWidth, bmp.bmHeight, FALSE, 2, 0);
+
+		g_nAppUp = ImageList_Add(himl, hBmp, (HBITMAP)NULL);
+		DeleteObject(hBmp);
+
+		hBmp = LoadBitmap(NULL, MAKEINTRESOURCE(OBM_ZOOMD));
+		g_nAppDown = ImageList_Add(himl, hBmp, (HBITMAP)NULL);
+		DeleteObject(hBmp);
+
+		if (ImageList_GetImageCount(himl) >= 2)
+			TreeView_SetImageList(hTree, himl, TVSIL_NORMAL);
+	}
 
 	for (int i = 0; i < DESKTOPS; i++)
 	{
@@ -90,8 +110,18 @@ VOID DrawTree(HWND hTree)
 		memset(szBuffer, 0, sizeof (szBuffer));
 		_stprintf(szBuffer, szDesktopNum, i);
 
+		TVITEM		tvi;
+		TVINSERTSTRUCT	tvis;
+
+		memset(&tvi, 0, sizeof(tvi));
 		tvi.mask = TVIF_TEXT;
 		tvi.pszText = szBuffer;
+		if ((g_nAppUp != -1) && (g_nAppDown != -1))
+		{
+			tvi.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+			tvi.iImage = g_nAppUp;
+			tvi.iSelectedImage = g_nAppDown;
+		}
 		tvis.hParent = tvis.hInsertAfter = TVI_ROOT;
 		tvis.item = tvi;
 		HTREEITEM hItem = TreeView_InsertItem(hTree, &tvis);
@@ -118,9 +148,16 @@ VOID DrawTree(HWND hTree)
 					_stprintf(szBuffer, szAppNoName, (DWORD)*itor);
 				}
 
-				tvi.pszText = szBuffer;
+				memset(&tvi, 0, sizeof(tvi));
 				tvi.mask = TVIF_TEXT | TVIF_PARAM;
+				tvi.pszText = szBuffer;
 				tvi.lParam = (LPARAM)*itor;
+				if ((g_nAppUp != -1) && (g_nAppDown != -1))
+				{
+					tvi.mask |= TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+					tvi.iImage = g_nAppUp;
+					tvi.iSelectedImage = g_nAppDown;
+				}
 				tvis.item = tvi;
 				tvis.hParent = hItem;
 				tvis.hInsertAfter = TVI_SORT;
@@ -159,6 +196,7 @@ INT FindItem(HWND hTreeView, HWND hWindow, HTREEITEM htiParent=NULL)
 
 BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	static HINSTANCE hInstance;
 	static HWND	hTree = NULL;
 	static HWND hCopy = NULL;				//handle to window to copy
 	static BOOL bCut = FALSE;
@@ -173,6 +211,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	case WM_INITDIALOG:
 	{
 						  pWOD = (pWindowsOnDesktop)lParam;
+						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
 						  DrawTree(hTree);
@@ -285,7 +324,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 												  TCHAR szBuffer[MAX_PATH];
 												  memset(szBuffer, 0, sizeof (szBuffer));
 
-												  tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_PARAM;
+												  tvi.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 												  tvi.hItem = htiCopy;
 												  tvi.pszText = szBuffer;
 												  tvi.cchTextMax = sizeof (szBuffer) / sizeof (TCHAR);
@@ -296,7 +335,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 												  HTREEITEM hParent = TreeView_GetParent(hTree, htiPaste);
 												  tvis.hParent = hParent ? hParent : htiPaste;
-												  tvi.mask = TVIF_TEXT | TVIF_PARAM;
+												  tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 												  tvis.item = tvi;
 												  tvis.hInsertAfter = TVI_SORT;
 
@@ -434,13 +473,15 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 										TreeView_SelectItem(hTree, hCurrentItem);
 
+										POINT point;
+										GetCursorPos(&point);
 										if (!TreeView_GetParent(hTree, hCurrentItem))
 										{
-											ShowPopupMenu(hDlg, FALSE, FALSE, (BOOL)hCopy, FALSE);
+											ShowPopupMenu(point, hDlg, FALSE, FALSE, (BOOL)hCopy, FALSE);
 										}
 										else
 										{
-											ShowPopupMenu(hDlg, TRUE, TRUE, (BOOL)hCopy, TRUE);
+											ShowPopupMenu(point, hDlg, TRUE, TRUE, (BOOL)hCopy, TRUE);
 										}
 										return TRUE;
 					  }
@@ -476,6 +517,39 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														  SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_PASTE, 0), 0);
 													  }
 													  break;
+										  }
+										  case VK_APPS:
+										  {
+														HTREEITEM hCurrentItem = TreeView_GetSelection(hTree);
+														if (hCurrentItem)
+														{
+															TreeView_SelectItem(hTree, hCurrentItem);
+
+															RECT rcItem;
+															GetWindowRect(hTree, &rcItem);
+
+															POINT point = { rcItem.left, rcItem.top };
+
+															if (TreeView_GetItemRect(hTree, hCurrentItem, &rcItem, TRUE))
+															{
+																point.x += rcItem.left;
+																point.y += rcItem.top;
+
+																if (!TreeView_GetParent(hTree, hCurrentItem))
+																{
+																	ShowPopupMenu(point, hDlg, FALSE, FALSE, (BOOL)hCopy, FALSE);
+																}
+																else
+																{
+																	ShowPopupMenu(point, hDlg, TRUE, TRUE, (BOOL)hCopy, TRUE);
+																}
+															}
+														}
+														else
+														{
+															return FALSE;
+														}
+														break;
 										  }
 										  }
 										  return TRUE;
