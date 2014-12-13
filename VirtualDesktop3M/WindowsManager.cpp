@@ -214,6 +214,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
+
 						  DrawTree(hTree);
 						  return TRUE;
 	}
@@ -390,7 +391,9 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 					   case IDOK:
 					   {
 									if (hDelete)
+									{
 										ShowWindow(hDelete, SW_HIDE);
+									}
 									hDelete = NULL;
 
 									HTREEITEM hCurrentRoot = TreeView_GetRoot(hTree);
@@ -434,6 +437,22 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 					  switch (((LPNMHDR)lParam)->code)
 					  {
+					  case TVN_GETINFOTIP:
+					  {
+											 LPNMTVGETINFOTIP pTip = (LPNMTVGETINFOTIP)lParam;
+											 HTREEITEM item = pTip->hItem;
+
+											 TVITEM tvitem;
+											 tvitem.mask = TVIF_TEXT;
+											 tvitem.hItem = item;
+											 TCHAR infoTipBuff[1024];
+											 tvitem.pszText = infoTipBuff;
+											 tvitem.cchTextMax = sizeof(infoTipBuff) / sizeof(TCHAR);
+											 TreeView_GetItem(hTree, &tvitem);
+
+											 _tcscpy_s(pTip->pszText, pTip->cchTextMax, tvitem.pszText);
+											 return TRUE;
+					  }
 					  case TVN_BEGINDRAG:
 					  {
 											HIMAGELIST himl;
@@ -558,6 +577,6 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 						  return TRUE;
 					  }
 	} //WM_NOTIFY
-	} //switch
+	} //main-switch
 	return FALSE;
 }

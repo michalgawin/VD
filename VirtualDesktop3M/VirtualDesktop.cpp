@@ -139,6 +139,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		return -1;
 	}
 
+	INITCOMMONCONTROLSEX initControls;
+	initControls.dwSize = sizeof (INITCOMMONCONTROLSEX);
+	initControls.dwICC = ICC_BAR_CLASSES;
+	InitCommonControlsEx(&initControls);	//activate tooltips
+
 	wndclass.style = CS_HREDRAW | CS_VREDRAW;
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.cbClsExtra = 0;
