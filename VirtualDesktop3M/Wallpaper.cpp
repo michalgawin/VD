@@ -34,11 +34,7 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 							  0,
 							  SWP_NOZORDER | SWP_NOSIZE);
 
-						  //WARNING!!! Work only if edit fields in resources are in ascending sequence!
-						  for (int i = 0; i <= (IDC_WALL_EDIT4 - IDC_WALL_EDIT0); i++)
-						  {
-							  SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0 + i), pWOD[i].szWallpaper);
-						  }
+						  SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), pWOD->szWallpaper);
 
 						  return TRUE;
 	}
@@ -47,30 +43,23 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		{
 		case IDOK:
 		{
-					 for (int i = 0; i < DESKTOPS; i++)
+					 BOOL bRet = FALSE;
+					 TCHAR* szWallpaper2 = new TCHAR[MAX_PATH];
+					 GetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), szWallpaper2, MAX_PATH);
+
+					 if (_tcscmp(pWOD->szWallpaper, szWallpaper2))
 					 {
-						 memset(pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
+						 memset(pWOD->szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
+						 _tcscpy(pWOD->szWallpaper, szWallpaper2);
+						 bRet = TRUE;
 					 }
-
-					 //WARNING!!! Work only if edit fields in resources are in ascending sequence!
-					 for (int i = 0; i <= (IDC_WALL_EDIT4 - IDC_WALL_EDIT0); i++)
-					 {
-						 GetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0 + i), pWOD[i].szWallpaper, MAX_PATH);
-					 }
-
-					 SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(pWOD[GetCurrentDesktop()].szWallpaper), pWOD[GetCurrentDesktop()].szWallpaper, 0);
-
-					 EndDialog(hDlg, TRUE);
+					 EndDialog(hDlg, bRet);
 					 return TRUE;
 		}
 		case IDCANCEL:
-			EndDialog(hDlg, TRUE);
+			EndDialog(hDlg, FALSE);
 			return TRUE;
 		case IDC_BUTTON_SEARCH0:
-		case IDC_BUTTON_SEARCH1:
-		case IDC_BUTTON_SEARCH2:
-		case IDC_BUTTON_SEARCH3:
-		case IDC_BUTTON_SEARCH4:
 		{
 								   TCHAR ext_name[MAX_PATH];
 								   memset(ext_name, 0, sizeof (ext_name));
@@ -95,8 +84,7 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 
 								   if (GetOpenFileName(&ofn))
 								   {
-									   //WARNING!!! Work only if edit fields and buttons in resources are in ascending sequence!
-									   SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0 + (LOWORD(wParam) - IDC_BUTTON_SEARCH0)), ofn.lpstrFile);
+									   SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), ofn.lpstrFile);
 								   }
 
 								   return TRUE;

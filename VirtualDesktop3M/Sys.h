@@ -24,35 +24,38 @@ const TCHAR szClassName[] = TEXT("_VirtualDesktop_");
 
 /** WM_COMMAND messages */
 
-/** id represent set plugin always on top */
+/** id represents set plugin always on top */
 #define	CMD_AOT			1
 
-/** id represent dialog to open desktop manager */
+/** id represents dialog to open desktop manager */
 #define	CMD_DSKMGR		(CMD_AOT + 1)
 
-/** id represent dialog in menu to change plugin */
+/** id represents dialog in menu to change plugin */
 #define	CMD_PLUGIN		(CMD_DSKMGR + 1)
 
-/** id represent dialog in menu to set wallpate*/
+/** id represents dialog in menu to set wallpate*/
 #define CMD_WALL		(CMD_PLUGIN + 1)
 
-/** id represent dialog 'About' in menu */
+/** id represents dialog 'About' in menu */
 #define CMD_ABOUT		(CMD_WALL + 1)
 
-/** id represent dialog in menu to close application */
+/** id represents dialog in menu to close application */
 #define CMD_QUIT		(CMD_ABOUT + 1)
 
-/** id represent copy node from tree popup menu */
+/** id represents copy node from tree popup menu */
 #define CMD_TREE_COPY	(CMD_QUIT + 1)
 
-/** id represent cut node from tree popup menu */
+/** id represents cut node from tree popup menu */
 #define CMD_TREE_CUT	(CMD_TREE_COPY + 1)
 
-/** id represent paste node from tree popup menu */
+/** id represents paste node from tree popup menu */
 #define CMD_TREE_PASTE	(CMD_TREE_CUT + 1)
 
-/** id represent delete node from tree popup menu */
+/** id represents delete node from tree popup menu */
 #define CMD_TREE_DELETE	(CMD_TREE_PASTE+1)
+
+/** id represents properties node from tree popup menu */
+#define CMD_TREE_PROPERTIES (CMD_TREE_DELETE+1)
 
 
 #endif //_SYS_H_VD_

@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,2
- PRODUCTVERSION 1,0,1,1
+ FILEVERSION 0,0,1,8
+ PRODUCTVERSION 0,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -67,15 +67,15 @@ BEGIN
     BEGIN
         BLOCK "041504b0"
         BEGIN
-            VALUE "Comments", "Added protection before invalid handle on window and added multithread protection."
-            VALUE "CompanyName", "Michal Gawin"
+            VALUE "Comments", "v0.1"
+            VALUE "CompanyName", "https://github.com/michalgawin"
             VALUE "FileDescription", "Desktop Manager"
-            VALUE "FileVersion", "1.0.1.2"
+            VALUE "FileVersion", "0.0.1.8"
             VALUE "InternalName", "Desktop Manager"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "DesktopMgr.dll"
-            VALUE "ProductName", "Virtual Desktop"
-            VALUE "ProductVersion", "1.0.1.1"
+            VALUE "ProductName", "VD"
+            VALUE "ProductVersion", "0.1.0.0"
         END
     END
     BLOCK "VarFileInfo"

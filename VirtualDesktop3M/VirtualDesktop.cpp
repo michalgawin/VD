@@ -12,7 +12,6 @@
 
 // Plugins
 #include "WindowsManager.h"
-#include "Wallpaper.h"
 #include "Plugin.h"
 #include "About.h"
 
@@ -69,40 +68,29 @@ BOOL CreatePopupMenuInTray(HWND hwnd, BOOL check)
 
 	TCHAR szOnTop[MAX_PATH];
 	LoadString(hInstance, IDS_ON_TOP, (TCHAR*)szOnTop, sizeof(szOnTop) / sizeof(TCHAR));
-
-	if (check)
-		AppendMenu(menu, MF_BYPOSITION | MF_STRING | MF_CHECKED, CMD_AOT, (LPCTSTR)szOnTop);
-	else
-		AppendMenu(menu, MF_BYPOSITION | MF_STRING | MF_UNCHECKED, CMD_AOT, (LPCTSTR)szOnTop);
+	AppendMenu(menu, MF_BYPOSITION | MF_STRING | check ? MF_CHECKED : MF_UNCHECKED, CMD_AOT, (LPCTSTR)szOnTop);
 
 	TCHAR szContDeskManager[MAX_PATH];
 	LoadString(hInstance, IDS_DESK_CONTENT_MANAGER, (TCHAR*)szContDeskManager, sizeof(szContDeskManager) / sizeof(TCHAR));
-
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_DSKMGR, (LPCTSTR)szContDeskManager);
 
 	TCHAR szPlugin[MAX_PATH];
 	LoadString(hInstance, IDS_PLUGIN, (TCHAR*)szPlugin, sizeof(szPlugin) / sizeof(TCHAR));
-
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_PLUGIN, (LPCTSTR)szPlugin);
 
-	TCHAR szWallpapers[MAX_PATH];
-	LoadString(hInstance, IDS_WALLPAPERS, (TCHAR*)szWallpapers, sizeof(szWallpapers) / sizeof(TCHAR));
-
-	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_WALL, (LPCTSTR)szWallpapers);
 	AppendMenu(menu, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 	TCHAR szAbout[MAX_PATH];
 	LoadString(hInstance, IDS_ABOUT, (TCHAR*)szAbout, sizeof(szAbout) / sizeof(TCHAR));
-
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_ABOUT, (LPCTSTR)szAbout);
+
 	AppendMenu(menu, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 	TCHAR szQuit[MAX_PATH];
 	LoadString(hInstance, IDS_QUIT, (TCHAR*)szQuit, sizeof(szQuit) / sizeof(TCHAR));
-
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_QUIT, (LPCTSTR)szQuit);
 
-	SetMenuDefaultItem(menu, CMD_WALL, FALSE);
+	SetMenuDefaultItem(menu, CMD_DSKMGR, FALSE);
 
 	GetCursorPos(&mouse);
 	SetForegroundWindow(hwnd);
@@ -206,7 +194,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static HINSTANCE hInstance;							// instance to program
 	static HINSTANCE shared_Dll = NULL;				// handle to instance of shared dll
 	static TCHAR szOrginalWallpaper[MAX_PATH];		// hold orginal desktop wallpaper
-	static BOOL check = TRUE;						// hold status of check field "Always on top"
+	static BOOL bAlwaysOnTop = TRUE;						// hold status of check field "Always on top"
 	static CTray* tray = NULL;
 
 	TCHAR szWallpaper[MAX_PATH];							// string which is use to create bitmap
@@ -294,71 +282,77 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					  return 0;
 	}
 	case WM_PARENTNOTIFY:	// notification while children DestroyWindow
-		return 0;
+	{
+								return 0;
+	}
 	case WM_TRAY_ICON:
-		switch (lParam)
-		{
-		case WM_LBUTTONDOWN:
-		{
-							   BOOL visible = FALSE;
-							   if (pluginGUI.hWnd)
-							   {
-								   visible = IsWindowVisible(pluginGUI.hWnd);
-							   }
-							   if (!visible)
-							   {
-								   if (hPlugin != NULL)
-								   {
-									   pluginGUI.hWnd = pluginGUI.PluginOpenDlgFun(hwnd, shared_Dll);
-									   UpdateWindow(pluginGUI.hWnd);
-								   }
-							   }
-		}
-			break;
-		case WM_RBUTTONDOWN:
-			CreatePopupMenuInTray(hwnd, check);
-			break;
-		}
-		return 0;
+	{
+						 switch (lParam)
+						 {
+						 case WM_LBUTTONDOWN:
+						 {
+												BOOL visible = FALSE;
+												if (pluginGUI.hWnd)
+												{
+													visible = IsWindowVisible(pluginGUI.hWnd);
+												}
+												if (!visible)
+												{
+													if (hPlugin != NULL)
+													{
+														pluginGUI.hWnd = pluginGUI.PluginOpenDlgFun(hwnd, shared_Dll);
+														UpdateWindow(pluginGUI.hWnd);
+													}
+												}
+						 }
+							 break;
+						 case WM_RBUTTONDOWN:
+							 CreatePopupMenuInTray(hwnd, bAlwaysOnTop);
+							 break;
+						 }
+						 return 0;
+	}
 	case WM_HOTKEY:
-		switch (HIWORD(lParam))
-		{
-		case VK_TAB:
-		{
-					   switch (LOWORD(lParam))
-					   {
-					   case MOD_CONTROL | MOD_SHIFT:
-					   {
-													   int desk = GetCurrentDesktop();
-													   desk--;
+	{
+					  switch (HIWORD(lParam))
+					  {
+					  case VK_TAB:
+					  {
+									 switch (LOWORD(lParam))
+									 {
+									 case MOD_CONTROL | MOD_SHIFT:
+									 {
+																	 int desk = GetCurrentDesktop();
+																	 desk--;
 
 
-													   if (desk < 0 || desk >= DESKTOPS)
-													   {
-														   desk = (desk + DESKTOPS) % DESKTOPS;
-													   }
+																	 if (desk < 0 || desk >= DESKTOPS)
+																	 {
+																		 desk = (desk + DESKTOPS) % DESKTOPS;
+																	 }
 
-													   ChangeDesktop(desk);
-													   break;
-					   }
-					   case MOD_CONTROL:
-					   {
-										   int desk = GetCurrentDesktop();
-										   desk++;
+																	 ChangeDesktop(desk);
+																	 break;
+									 }
+									 case MOD_CONTROL:
+									 {
+														 int desk = GetCurrentDesktop();
+														 desk++;
 
-										   desk = desk % DESKTOPS;
+														 desk = desk % DESKTOPS;
 
-										   ChangeDesktop(desk);
-										   break;
-					   }
-					   default:
-						   break;
-					   }
-		}
-		default:
-			break;
-		}
-		return 0;
+														 ChangeDesktop(desk);
+														 break;
+									 }
+									 default:
+										 break;
+									 }
+					  }
+					  default:
+						  break;
+					  }
+					  return 0;
+	}
 	case WM_CHANGE_DESKTOP:	// lParam - no. of desktop
 	{
 								SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[lParam].szWallpaper), windowsOnDesktop[lParam].szWallpaper, 0);
@@ -374,7 +368,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 								ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
 
-								if (check)
+								if (bAlwaysOnTop)
 								{
 									if (hPlugin != NULL)
 									{
@@ -398,42 +392,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 										pluginGUI.hWnd = NULL;
 									}
 								}
+								return 0;
 	}
-		return 0;
 	case WM_COMMAND:
 	{
 					   switch (LOWORD(wParam))
 					   {
 					   case CMD_AOT:
-						   check = !check;
-						   break;
+					   {
+									   bAlwaysOnTop = !bAlwaysOnTop;
+									   break;
+					   }
 					   case CMD_DSKMGR:
-						   GetWindowsFromDesktop(hwnd, pluginGUI.hWnd, windowsOnDesktop[GetCurrentDesktop()].table);
-						   if (DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)windowsOnDesktop))
-						   {
-							   //HideWindows (hwnd, pluginGUI.hWnd, windowsTab[GetCurrentDesktop ()].table, FALSE);
-						   }
-						   break;
+					   {
+										  GetWindowsFromDesktop(hwnd, pluginGUI.hWnd, windowsOnDesktop[GetCurrentDesktop()].table);
+										  WindowsOnDesktop wod = {};
+										  for (vHandleItor itor = windowsOnDesktop[GetCurrentDesktop()].table.begin(); itor != windowsOnDesktop[GetCurrentDesktop()].table.end();)
+										  {
+											  if (IsWindow(*itor))
+											  {
+												  wod.table.push_back(*itor);
+												  itor++;
+											  }
+											  else
+											  {
+												  itor = windowsOnDesktop[GetCurrentDesktop()].table.erase(itor++);
+											  }
+										  }
+										  if (DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)windowsOnDesktop))
+										  {
+											  HideWindows(hwnd, pluginGUI.hWnd, wod.table, FALSE);
+											  ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
+											  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[GetCurrentDesktop()].szWallpaper), windowsOnDesktop[GetCurrentDesktop()].szWallpaper, 0);
+										  }
+										  break;
+					   }
 					   case CMD_PLUGIN:
 					   {
 										  DialogBox(hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc);
+										  break;
 					   }
-						   break;
-					   case CMD_WALL:
-						   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hwnd, DlgWallpaperProc, (LPARAM)windowsOnDesktop);
-						   break;
 					   case CMD_ABOUT:
-						   DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgAboutProc);
-						   break;
-					   case CMD_QUIT:
-						   SendMessage(hwnd, WM_CLOSE, 0, 0);
-						   break;
+					   {
+										 DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgAboutProc);
+										 break;
 					   }
+					   case CMD_QUIT:
+					   {
+										SendMessage(hwnd, WM_CLOSE, 0, 0);
+										break;
+					   }
+					   }
+					   return 0;
 	}
-		return 0;
 	case WM_QUERYENDSESSION:
-		SendMessage(hwnd, WM_DESTROY, 0, 0);
-		return 1;
+	{
+							   //SendMessage(hwnd, WM_DESTROY, 0, 0);
+							   return TRUE;
+	}
 	case WM_CLOSE: // catch ALT+F4 to prevent hide tray icon
 	{
 					   TCHAR szAppName[MAX_PATH];
@@ -445,8 +461,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   {
 						   SendMessage(hwnd, WM_DESTROY, 0, 0);
 					   }
+					   return 0;
 	}
-		return 0;
+	case WM_ENDSESSION:
 	case WM_DESTROY:
 	{
 					   if (hPlugin)

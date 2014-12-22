@@ -65,8 +65,8 @@ IDI_ICON0               ICON                    "icon0.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,1,2
- PRODUCTVERSION 1,0,1,1
+ FILEVERSION 0,0,1,8
+ PRODUCTVERSION 0,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -81,15 +81,15 @@ BEGIN
     BEGIN
         BLOCK "041504b0"
         BEGIN
-            VALUE "Comments", "Added vector container for windows handles and protection before delete last intance of application."
-            VALUE "CompanyName", "Michal Gawin"
+            VALUE "Comments", "v0.1"
+            VALUE "CompanyName", "https://github.com/michalgawin"
             VALUE "FileDescription", "VirtualDesktop"
-            VALUE "FileVersion", "1.0.1.2"
+            VALUE "FileVersion", "0.0.1.8"
             VALUE "InternalName", "Virtual Desktop"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "VirtualDesktop.exe"
-            VALUE "ProductName", "Virtual Desktop"
-            VALUE "ProductVersion", "1.0.1.1"
+            VALUE "ProductName", "VD"
+            VALUE "ProductVersion", "0.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -114,27 +114,15 @@ BEGIN
     LTEXT           "Created by Michal Gawin",IDC_STATIC,167,56,83,8
 END
 
-IDD_DIALOG_WALLPAPER DIALOG 0, 0, 186, 138
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP
-FONT 8, "MS Sans Serif"
+IDD_DIALOG_WALLPAPER DIALOGEX 0, 0, 187, 87
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,117,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,7,117,50,14
-    EDITTEXT        IDC_WALL_EDIT0,53,14,109,14,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Wallpaper#0:",IDC_STATIC,8,16,46,8
-    PUSHBUTTON      "...",IDC_BUTTON_SEARCH0,163,14,16,14
-    EDITTEXT        IDC_WALL_EDIT1,53,32,109,14,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_WALL_EDIT2,53,50,109,14,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_WALL_EDIT3,53,67,109,14,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_WALL_EDIT4,53,85,109,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "...",IDC_BUTTON_SEARCH1,163,32,16,14
-    PUSHBUTTON      "...",IDC_BUTTON_SEARCH2,163,50,16,14
-    PUSHBUTTON      "...",IDC_BUTTON_SEARCH3,163,67,16,14
-    PUSHBUTTON      "...",IDC_BUTTON_SEARCH4,163,85,16,14
-    LTEXT           "Wallpaper#1:",IDC_STATIC,7,35,46,8
-    LTEXT           "Wallpaper#2:",IDC_STATIC,7,53,46,8
-    LTEXT           "Wallpaper#3:",IDC_STATIC,7,70,46,8
-    LTEXT           "Wallpaper#4:",IDC_STATIC,7,88,46,8
+    DEFPUSHBUTTON   "OK",IDOK,130,66,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,7,66,50,14
+    PUSHBUTTON      "...",IDC_BUTTON_SEARCH0,164,17,16,14
+    EDITTEXT        IDC_WALL_EDIT0,53,17,109,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Wallpaper:",IDC_STATIC,8,19,46,8
 END
 
 IDD_SELECT_PLUGIN DIALOG 0, 0, 240, 46
@@ -185,9 +173,9 @@ BEGIN
     IDD_DIALOG_WALLPAPER, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 131
+        BOTTOMMARGIN, 80
     END
 
     IDD_SELECT_PLUGIN, DIALOG
@@ -254,6 +242,7 @@ BEGIN
     IDS_EXIT_QUESTION       "Czy chcesz zamkn¹æ aplikacjê?"
     IDS_EXT_NAME_BMP        "Mapa bitowa (*.bmp)"
     IDS_ERR_POPUP_MENU      "Nie mo¿na stworzyæ kontekstowego menu: %d."
+    IDS_PROPERTIES          "W³aœciwoœci"
 END
 
 #endif    // Polish (Poland) resources
