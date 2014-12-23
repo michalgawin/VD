@@ -429,40 +429,50 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 					   }
 					   case IDOK:
 					   {
-									HTREEITEM hCurrentRoot = TreeView_GetRoot(hTree);
-									if (hCurrentRoot)
-									{
-										int i = 0;
-										do
-										{
-											memset(pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
-											_tcscpy(pWOD[i].szWallpaper, temp_pWOD[i].szWallpaper);
+									BOOL bRet = TRUE;
 
-											HTREEITEM hCurrentChild = TreeView_GetChild(hTree, hCurrentRoot);
-											pWOD[i].table.clear();
-											if (hCurrentChild)
-											{
-												do
-												{
-													TVITEM tvi;
-													tvi.mask = TVIF_HANDLE;
-													tvi.hItem = hCurrentChild;
-													TreeView_GetItem(hTree, &tvi);
-													pWOD[i].table.push_back((HWND)tvi.lParam);
-												} while (hCurrentChild = TreeView_GetNextItem(hTree, hCurrentChild, TVGN_NEXT));
-											}
-											i++;
-										} while (hCurrentRoot = TreeView_GetNextItem(hTree, hCurrentRoot, TVGN_NEXT));
-									}
-									else
+									HTREEITEM hCurrentRoot;
+									int i;
+									for (i = 0, hCurrentRoot = TreeView_GetRoot(hTree); hCurrentRoot != NULL; hCurrentRoot = TreeView_GetNextItem(hTree, hCurrentRoot, TVGN_NEXT), i++)
 									{
-										return FALSE;
+										memset(pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
+										_tcscpy(pWOD[i].szWallpaper, temp_pWOD[i].szWallpaper);
+
+										pWOD[i].table.clear();
+
+										for (HTREEITEM hCurrentChild = TreeView_GetChild(hTree, hCurrentRoot); hCurrentChild != NULL; hCurrentChild = TreeView_GetNextItem(hTree, hCurrentChild, TVGN_NEXT))
+										{
+											TVITEM tvi;
+											tvi.mask = TVIF_HANDLE;
+											tvi.hItem = hCurrentChild;
+											TreeView_GetItem(hTree, &tvi);
+											pWOD[i].table.push_back((HWND)tvi.lParam);
+										}
 									}
-									EndDialog(hDlg, TRUE);
+
+									if (i != DESKTOPS)
+									{
+										bRet = FALSE;
+									}
+									
+									for (int i = 0; i < DESKTOPS; i++)
+									{
+										delete[] temp_pWOD[i].szWallpaper;
+									}
+									delete[] temp_pWOD;
+
+									EndDialog(hDlg, bRet);
+
 									return TRUE;
 					   }
 					   case IDCANCEL:
 					   {
+										for (int i = 0; i < DESKTOPS; i++)
+										{
+											delete[] temp_pWOD[i].szWallpaper;
+										}
+										delete[] temp_pWOD;
+
 										EndDialog(hDlg, FALSE);
 										return TRUE;
 					   }
