@@ -88,7 +88,7 @@ BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCH
 	DWORD type = REG_SZ;
 	TCHAR path[MAX_PATH];
 
-	memset (path, 0, sizeof (path));
+	memset (path, 0, sizeof (TCHAR) * MAX_PATH);
 	_tcscpy (path, branch);
 	_tcscat (path, TEXT("\\"));
 	_tcscat (path, key);
@@ -107,17 +107,18 @@ BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCH
 		if (IsTextUnicode (value, size, NULL))
 		{
 			WCHAR wszVal[MAX_PATH];
-			memset (wszVal, 0, sizeof (wszVal));
+			memset (wszVal, 0, sizeof (WCHAR) * MAX_PATH);
 
 			MultiByteToWideChar (CP_ACP,
 								 0,
 								 (const char*) val,
 								 strlen ((const char*) val)+1,
 								 wszVal,
-								 sizeof (wszVal) / sizeof (wszVal[0])
+								 sizeof (wszVal) / sizeof (WCHAR)
 								 );
 
-			memcpy (value, wszVal, sizeof (wszVal));
+			memcpy (value, wszVal, sizeof (WCHAR) * MAX_PATH);
+			
 		}
 		else
 		{

@@ -17,8 +17,8 @@ INT CurrentDesktop = 0;
 #pragma comment(linker, "/SECTION:.ASHARE,RWS")
 
 
-HINSTANCE hInstance;
-CRITICAL_SECTION criticalSection;
+static HINSTANCE g_hInstance;
+static CRITICAL_SECTION g_criticalSection;
 
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
@@ -26,14 +26,14 @@ BOOL APIENTRY DllMain( HANDLE hModule,
                        LPVOID lpReserved
 					 )
 {
-	hInstance = (HINSTANCE) hModule;
+	g_hInstance = (HINSTANCE)hModule;
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		InitializeCriticalSection(&criticalSection);
+		InitializeCriticalSection(&g_criticalSection);
 		break;
 	case DLL_PROCESS_DETACH:
-		DeleteCriticalSection(&criticalSection);
+		DeleteCriticalSection(&g_criticalSection);
 		break;
 	default:
 		break;
@@ -45,9 +45,9 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 extern "C" __declspec(dllexport) VOID __stdcall SetCurrentDesktop (INT desktop)
 {
-	EnterCriticalSection(&criticalSection);
+	EnterCriticalSection(&g_criticalSection);
 	CurrentDesktop = desktop;
-	LeaveCriticalSection(&criticalSection);
+	LeaveCriticalSection(&g_criticalSection);
 }
 
 
@@ -57,14 +57,17 @@ extern "C" __declspec(dllexport) INT __stdcall GetCurrentDesktop ()
 }
 
 
-extern "C" __declspec(dllexport) VOID __stdcall ChangeDesktop (int desktop)
+extern "C" __declspec(dllexport) BOOL __stdcall ChangeDesktop (INT desktop)
 {
+	BOOL ret = FALSE;
 	HWND hwnd = FindWindowEx (NULL, NULL, szClassName, NULL);
 
 	if (hwnd != NULL)
 	{
-		EnterCriticalSection(&criticalSection);
-		SendMessage (hwnd, WM_CHANGE_DESKTOP, 0, desktop);
-		LeaveCriticalSection(&criticalSection);
+		EnterCriticalSection(&g_criticalSection);
+		ret = (SendMessage(hwnd, WM_CHANGE_DESKTOP, 0, desktop) == 0) ? TRUE : FALSE;
+		LeaveCriticalSection(&g_criticalSection);
 	}
+
+	return ret;
 }

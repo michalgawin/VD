@@ -1,79 +1,102 @@
 /**
- * @author Micha³ Gawin
- */
+* @author Micha³ Gawin
+*/
 
 
 #include "Plugin.h"
 
 
-PluginGUI pluginGUI;
+CPlugin g_PluginUI;
 
-
-HINSTANCE LoadPlugin (TCHAR* szDll)
+CPlugin::CPlugin()
 {
-	return LoadLibrary (szDll);
+	m_hLib = NULL;
+	m_szFullPath = NULL;
+	m_pfOpenDlg = NULL;
+	m_pfCloseDlg = NULL;
 }
 
+CPlugin::~CPlugin()
+{
+	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
+	m_hLib = NULL;
 
-BOOL FreePlugin (HINSTANCE hPlug)
+	if (m_szFullPath) delete[] m_szFullPath;
+	m_szFullPath = NULL;
+}
+
+BOOL CPlugin::LoadAll(TCHAR* szFullPath)
 {
 	BOOL ret = FALSE;
 
-	if (hPlug != NULL)
+	if (szFullPath)
 	{
-		if (FreeLibrary ((HMODULE) hPlug))
+		Unload();
+
+		if (SetFullPath(szFullPath))
 		{
-			ret = TRUE;
+			if (Load())
+			{
+				if (GetFunc(ExFunNameMakeDialog, (VOID**)&m_pfOpenDlg) && GetFunc(ExFunNameCloseDialog, (VOID**)&m_pfCloseDlg))
+				{
+					ret = TRUE;
+				}
+			}
 		}
 	}
 
 	return ret;
 }
 
-
-VOID* LoadPluginFunc (HINSTANCE hPlug, const char const * szFunc)
+TCHAR* CPlugin::SetFullPath(TCHAR* szFullPath)
 {
-	VOID* PluginFunc = NULL;
+	TCHAR* temp = m_szFullPath;
 
-	PluginFunc = (VOID*) GetProcAddress (hPlug, szFunc); 
+	if (szFullPath)
+	{
+		INT len = _tcslen(szFullPath) + 1;
+		m_szFullPath = new TCHAR[len];
+		memset(m_szFullPath, 0, sizeof(TCHAR)* len);
+		_tcscpy(m_szFullPath, szFullPath);
 
-	return PluginFunc;
+		if (temp) delete[] temp;
+		temp = NULL;
+	}
+
+	return m_szFullPath;
+}
+
+BOOL CPlugin::Load()
+{
+	BOOL ret = FALSE;
+
+	if (m_szFullPath)
+	{
+		if ((m_hLib = LoadLibrary(m_szFullPath))) ret = TRUE;
+	}
+
+	return ret;
+}
+
+VOID CPlugin::Unload()
+{
+	m_pfOpenDlg = NULL;
+	if (m_pfCloseDlg) m_pfCloseDlg();
+	m_pfCloseDlg = NULL;
+
+	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
+	m_hLib = NULL;
+}
+
+BOOL CPlugin::GetFunc(const char* szFuncName, VOID** pFun)
+{
+	if (m_hLib) *pFun = (VOID*)GetProcAddress(m_hLib, szFuncName);
+
+	return (*pFun != NULL);
 }
 
 
-BOOL GetPlugin (HINSTANCE &hPlug, TCHAR* szPath, t_PluginFunc& PluginOpenDlg, t_PluginClose& PluginCloseDlg)
-{
-	BOOL status = FALSE;
-
-	if (hPlug != NULL)
-	{
-		FreePlugin (hPlug);
-	}
-
-	hPlug = LoadPlugin (szPath);
-	if (hPlug != NULL)
-	{
-		PluginOpenDlg = (t_PluginFunc) LoadPluginFunc (hPlug, ExFunNameMakeDialog);
-		PluginCloseDlg = (t_PluginClose) LoadPluginFunc (hPlug, ExFunNameCloseDialog);
-
-		if (PluginOpenDlg && PluginCloseDlg)
-		{
-			status = TRUE;
-		}
-		else
-		{
-			FreePlugin (hPlug);
-			hPlug = NULL;
-			PluginOpenDlg = NULL;
-			PluginCloseDlg = NULL;
-		}
-	}
-
-	return status;
-}
-
-
-BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static HINSTANCE hPlug = NULL;
 	static HINSTANCE hInstance;
@@ -83,77 +106,78 @@ BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	switch (message)
 	{
 	case WM_INITDIALOG:
-		{
-		hInstance = (HINSTANCE) GetWindowLong (hDlg, GWL_HINSTANCE);
+	{
+						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
-		RECT rc;
-		GetWindowRect (hDlg, &rc);
-		cxScreen = GetSystemMetrics (SM_CXSCREEN);
-		cyScreen = GetSystemMetrics (SM_CYSCREEN);
+						  RECT rc;
+						  GetWindowRect(hDlg, &rc);
+						  cxScreen = GetSystemMetrics(SM_CXSCREEN);
+						  cyScreen = GetSystemMetrics(SM_CYSCREEN);
 
-		SetWindowPos (hDlg,
-					  NULL,
-					  (cxScreen-(rc.right-rc.left)) / 2,
-					  (cyScreen-(rc.bottom-rc.top)) / 2,
-					  0,
-					  0,
-					  SWP_NOZORDER | SWP_NOSIZE);
+						  SetWindowPos(hDlg,
+							  NULL,
+							  (cxScreen - (rc.right - rc.left)) / 2,
+							  (cyScreen - (rc.bottom - rc.top)) / 2,
+							  0,
+							  0,
+							  SWP_NOZORDER | SWP_NOSIZE);
 
-		SetWindowText (GetDlgItem (hDlg, IDC_PLUGIN_EDIT), pluginGUI.szPluginPath);
+						  SetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), g_PluginUI.GetFullPath());
 
-		return TRUE;
-		}
+						  return TRUE;
+	}
 	case WM_COMMAND:
-		switch (LOWORD (wParam))
+		switch (LOWORD(wParam))
 		{
 		case IDOK:
-			{
-			GetWindowText (GetDlgItem (hDlg, IDC_PLUGIN_EDIT), pluginGUI.szPluginPath, MAX_PATH);
-			if (_tcslen (pluginGUI.szPluginPath) > 4)
-			{
-				if (hPlug != NULL)
-				{
-					pluginGUI.PluginCloseDlgFun (pluginGUI.hWnd);
-				}
-				
-				GetPlugin (hPlug, pluginGUI.szPluginPath, pluginGUI.PluginOpenDlgFun, pluginGUI.PluginCloseDlgFun);
-			}
-			EndDialog (hDlg, TRUE);
-			return TRUE;
-			}
+		{
+					 TCHAR szFullPath[MAX_PATH];
+					 memset(szFullPath, 0, sizeof(TCHAR)*MAX_PATH);
+
+					 GetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), szFullPath, MAX_PATH);
+					 if (_tcslen(szFullPath) > 4)
+					 {
+						 g_PluginUI.m_pfCloseDlg();
+						 g_PluginUI.LoadAll(szFullPath);
+					 }
+					 EndDialog(hDlg, TRUE);
+					 return TRUE;
+		}
 		case IDCANCEL:
-			EndDialog (hDlg, TRUE);
-			return TRUE;
+		{
+						 EndDialog(hDlg, TRUE);
+						 return TRUE;
+		}
 		case IDC_BUTTON_SELPLUGIN:
-			{
-			TCHAR ext_name[MAX_PATH];
-			memset (ext_name, 0, sizeof (ext_name));
-			LoadString (hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, sizeof (ext_name) / sizeof (TCHAR));
-			_tcscat (ext_name+_tcslen(ext_name)+1, TEXT("*.dll"));
+		{
+									 TCHAR ext_name[MAX_PATH];
+									 memset(ext_name, 0, sizeof (ext_name));
+									 LoadString(hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, sizeof (ext_name) / sizeof (TCHAR));
+									 _tcscat(ext_name + _tcslen(ext_name) + 1, TEXT("*.dll"));
 
-			OPENFILENAME ofn;
-			TCHAR szFile[MAX_PATH];
+									 OPENFILENAME ofn;
+									 TCHAR szFile[MAX_PATH];
 
-			ZeroMemory(&ofn, sizeof(ofn));
-			ofn.lStructSize = sizeof(ofn);
-			ofn.hwndOwner = hDlg;
-			ofn.lpstrFile = szFile;
-			ofn.lpstrFile[0] = TEXT('\0');
-			ofn.nMaxFile = sizeof(szFile) / sizeof(TCHAR);
-			ofn.lpstrFilter = ext_name;
-			ofn.nFilterIndex = 1;
-			ofn.lpstrFileTitle = NULL;
-			ofn.nMaxFileTitle = 0;
-			ofn.lpstrInitialDir = NULL;
-			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+									 ZeroMemory(&ofn, sizeof(ofn));
+									 ofn.lStructSize = sizeof(ofn);
+									 ofn.hwndOwner = hDlg;
+									 ofn.lpstrFile = szFile;
+									 ofn.lpstrFile[0] = TEXT('\0');
+									 ofn.nMaxFile = sizeof(szFile) / sizeof(TCHAR);
+									 ofn.lpstrFilter = ext_name;
+									 ofn.nFilterIndex = 1;
+									 ofn.lpstrFileTitle = NULL;
+									 ofn.nMaxFileTitle = 0;
+									 ofn.lpstrInitialDir = NULL;
+									 ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-			if (GetOpenFileName (&ofn)) 
-			{
-				SetWindowText (GetDlgItem (hDlg, IDC_PLUGIN_EDIT), ofn.lpstrFile);
-			}
+									 if (GetOpenFileName(&ofn))
+									 {
+										 SetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), ofn.lpstrFile);
+									 }
 
-			return TRUE;
-			}
+									 return TRUE;
+		}
 		}
 	}
 	return FALSE;

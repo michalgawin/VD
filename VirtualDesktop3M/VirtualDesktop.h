@@ -39,5 +39,7 @@ typedef struct __WindowsOnDesktop
 #define PREV_WIN		1
 #define NEXT_WIN		2
 
+#define ERR_DESKTOP_NUM	1
+
 
 #endif //_VIRTUAL_DESKTOP_H_VD_

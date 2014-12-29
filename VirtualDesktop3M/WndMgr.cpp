@@ -6,44 +6,32 @@
 #include "WndMgr.h"
 
 
-INT GetWindowsFromDesktop (HWND hApp, HWND hPlug, vHandle& table)
+INT GetWindowsFromDesktop (HWND hApp, vHandle& table)
 {
-	HWND hDesktop = NULL;
-	HWND hWindowTop = NULL;
-	HWND hDesktopIcon = NULL; // icon "My Computer" etc.
-	HWND hTaskBar = NULL;
-
-	hDesktop = GetDesktopWindow ();
-	hWindowTop = GetTopWindow (hDesktop);
+	HWND hDesktop = GetDesktopWindow();
+	HWND hTaskBar = FindWindowEx(NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
+	HWND hDesktopIcon = FindWindowEx(NULL, NULL, TEXT("Progman"), NULL);	// icons "My Computer" etc.
 
 	table.clear();
 
-	if (hWindowTop == NULL)
+	for (HWND hWindowTop = GetTopWindow(hDesktop); hWindowTop; hWindowTop = GetWindow(hWindowTop, GW_HWNDNEXT))
 	{
-		return table.size();
-	}
-
-	hTaskBar = FindWindowEx (NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
-	hDesktopIcon = FindWindowEx (NULL, NULL, TEXT("Progman"), NULL);
-
-	do
-	{
-		if (hWindowTop && IsWindowVisible (hWindowTop) && hWindowTop != hTaskBar && hWindowTop != hDesktop && hWindowTop != hDesktopIcon && hWindowTop != hApp && hWindowTop != hPlug)
-		{
+		if (IsWindowVisible(hWindowTop) && GetParent(hWindowTop) != hApp && hWindowTop != hTaskBar && hWindowTop != hDesktop && hWindowTop != hDesktopIcon && hWindowTop != hApp && GetParent(hWindowTop) != hTaskBar)
 			table.push_back(hWindowTop);
-		}
-	} while ((hWindowTop = GetWindow (hWindowTop, GW_HWNDNEXT)) != NULL);
+	}
 
 	return table.size();
 }
 
 
-INT HideWindows (HWND hApp, HWND hPlug, vHandle& table, BOOL update)
+INT HideWindows (HWND hApp, vHandle& table, BOOL update)
 {
 	if (update)
 	{
-		GetWindowsFromDesktop (hApp, hPlug, table);
+		GetWindowsFromDesktop (hApp, table);
 	}
+
+	HWND hPlug = GetWindow(hApp, GW_CHILD);
 
 	HDWP s = BeginDeferWindowPos (table.size());
 

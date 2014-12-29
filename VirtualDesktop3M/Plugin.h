@@ -1,6 +1,6 @@
 /**
- * @author Micha³ Gawin
- */
+* @author Micha³ Gawin
+*/
 
 
 #ifndef _PLUGIN_H_VD_
@@ -9,77 +9,59 @@
 #include "VirtualDesktop.h"
 
 const char ExFunNameMakeDialog[] = "_MakeDialog@8";
-const char ExFunNameCloseDialog[] = "_CloseDialog@4";
+const char ExFunNameCloseDialog[] = "_CloseDialog@0";
 
 /** Pointer on function which open plugin
- * @return void
- * @param hwnd handle to window
- */
-typedef HWND (__stdcall *t_PluginFunc) (HWND hwnd, HINSTANCE shared_DLL);
+* @return void
+* @param hwnd handle to window
+*/
+typedef HWND(__stdcall *t_PluginFunc) (HWND hwnd, HINSTANCE shared_DLL);
 
 /** Pointer on function which close plugin
- * @param hwnd handle to plugin window
- * @return void
- */
-typedef VOID (__stdcall *t_PluginClose) (HWND hDlg);
+* @param hwnd handle to plugin window
+* @return void
+*/
+typedef BOOL(__stdcall *t_PluginClose) ();
 
 /** Pointer on function which change desktop
- * @return void
- * @param new number of desktop
- */
-typedef VOID (__stdcall *t_PluginChangeDsk) (INT);
+* @return void
+* @param new number of desktop
+*/
+typedef VOID(__stdcall *t_PluginChangeDsk) (INT);
 
 /** Pointer on function which get current number of desktop
- * @return number of desktop
- */
-typedef INT (__stdcall *t_PluginGetCurDsk) ();
+* @return number of desktop
+*/
+typedef INT(__stdcall *t_PluginGetCurDsk) ();
 
-typedef struct __PluginGUI
+
+class CPlugin
 {
-	t_PluginFunc PluginOpenDlgFun;
-	t_PluginClose PluginCloseDlgFun;
+private:
+	HMODULE m_hLib;		//handle to library (dll)
+	TCHAR* m_szFullPath;	//full path, including file name, to library
 
-	HWND hWnd;
-	TCHAR szPluginPath[MAX_PATH];					// path to plugin
-} PluginGUI;
+public:
+	t_PluginFunc m_pfOpenDlg;	//pointer to function which creates window
+	t_PluginClose m_pfCloseDlg;	//pointer to function which close window
 
+public:
+	CPlugin();
+	~CPlugin();
+	BOOL LoadAll(TCHAR* szFullPath);
+	TCHAR* SetFullPath(TCHAR* szFullPath);
+	TCHAR* GetFullPath() { return m_szFullPath; };
 
-/**
- * Function load plugin
- * @return instance of dll file
- * @param dll_name name of loaded dll file
- */
-HINSTANCE LoadPlugin (TCHAR* szDll);
-
-/**
- * Function load function from dll
- * @return address of loaded function
- * @param hPlug handle to dll library
- * @param fun_name name of loaded function
- */
-VOID* LoadPluginFunc (HINSTANCE hPlug, const char const * szFunc);
+private:
+	BOOL Load();
+	VOID Unload();
+	BOOL GetFunc(IN const char* szFuncName, OUT VOID** pFun);
+};
 
 /**
- * Function free resources of loaded plugin
- * @return TRUE if wasn't error
- * @param hPlug handle to dll which we want free
- */
-BOOL FreePlugin (HINSTANCE hPlug);
-
-/**
- * Function load plugin and get all needed functions
- * @return TRUE if all was loaded success
- * @param hPlug handle to instance of plugin
- * @param PluginPath path to plugin
- * @param PluginDlg handle to exported function to open dialog
- * @param PluginClose handle to exported function to close dialog
- */
-BOOL GetPlugin (HINSTANCE &hPlug, TCHAR* szPath, t_PluginFunc& PluginOpenDlg, t_PluginClose& PluginCloseDlg);
-
-/**
- * Dialog window proc
- */
-BOOL CALLBACK DlgPluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+* Dialog window proc
+*/
+BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
 #endif //_PLUGIN_H_VD_

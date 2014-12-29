@@ -24,6 +24,6 @@ extern "C" __declspec(dllexport) INT __stdcall GetCurrentDesktop ();
  * @return void
  * @param desktop new desktop no.
  */
-extern "C" __declspec(dllexport) VOID __stdcall ChangeDesktop (int desktop);
+extern "C" __declspec(dllexport) BOOL __stdcall ChangeDesktop (int desktop);
 
 #endif //_DESKTOP_MGR_H_VD_

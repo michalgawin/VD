@@ -84,6 +84,8 @@ VOID DrawTree(HWND hTree, pWindowsOnDesktop pWOD)
 
 	HINSTANCE hInstance = (HINSTANCE)GetWindowLong(hTree, GWL_HINSTANCE);
 
+	TreeView_DeleteAllItems(hTree);
+
 	hBmp = LoadBitmap(NULL, MAKEINTRESOURCE(OBM_ZOOM));
 	if (hBmp)
 	{
@@ -557,6 +559,43 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 					  {
 										  switch (((LPNMTVKEYDOWN)lParam)->wVKey)
 										  {
+										  case VK_F5:
+										  {
+														BOOL status = ChangeDesktop(GetCurrentDesktop());		//update applications on current desktop
+														if (status)
+														{
+															for (int i = 0; i < DESKTOPS; i++)
+															{
+																delete[] temp_pWOD[i].szWallpaper;
+															}
+															delete[] temp_pWOD;
+
+															temp_pWOD = new WindowsOnDesktop[DESKTOPS];
+
+															for (int i = 0; i < DESKTOPS; i++)
+															{
+																temp_pWOD[i].szWallpaper = new TCHAR[MAX_PATH];
+																memset(temp_pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
+																_tcscpy(temp_pWOD[i].szWallpaper, pWOD[i].szWallpaper);
+
+																for (vHandleItor itor = pWOD[i].table.begin(); itor != pWOD[i].table.end();)
+																{
+																	if (IsWindow(*itor))
+																	{
+																		temp_pWOD[i].table.push_back(*itor);
+																		itor++;
+																	}
+																	else
+																	{
+																		itor = pWOD[i].table.erase(itor++);
+																	}
+																}
+															}
+															DrawTree(hTree, temp_pWOD);
+														}
+														else return FALSE;
+														break;
+										  }
 										  case VK_DELETE:
 										  {
 															SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(CMD_TREE_DELETE, 0), 0);
@@ -619,6 +658,10 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														  }
 														  break;
 										  }
+										  default:
+										  {
+													 break;
+										  }
 										  }
 										  return TRUE;
 					  }
@@ -627,6 +670,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 								 return TRUE;
 					  }
 					  }
+					  return TRUE;
 	} //WM_NOTIFY
 	} //main-switch
 	return FALSE;

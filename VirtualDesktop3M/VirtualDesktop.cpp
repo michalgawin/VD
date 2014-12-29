@@ -17,11 +17,9 @@
 
 #include "DesktopMgr\DesktopMgr.h"			// header to shared dll
 
-WindowsOnDesktop windowsOnDesktop[DESKTOPS];			// Struct keep data for each desktop
+WindowsOnDesktop windowsOnDesktop[DESKTOPS];			// Struct keeps data for each desktop
 
-HINSTANCE hPlugin;
-
-extern PluginGUI pluginGUI;
+extern CPlugin g_PluginUI;
 
 /* Function check did one of Virtual Desktop instance allready works
 * @return TRUE if works
@@ -68,7 +66,7 @@ BOOL CreatePopupMenuInTray(HWND hwnd, BOOL check)
 
 	TCHAR szOnTop[MAX_PATH];
 	LoadString(hInstance, IDS_ON_TOP, (TCHAR*)szOnTop, sizeof(szOnTop) / sizeof(TCHAR));
-	AppendMenu(menu, MF_BYPOSITION | MF_STRING | check ? MF_CHECKED : MF_UNCHECKED, CMD_AOT, (LPCTSTR)szOnTop);
+	AppendMenu(menu, MF_BYPOSITION | MF_STRING | (check ? MF_CHECKED : MF_UNCHECKED), CMD_AOT, (LPCTSTR)szOnTop);
 
 	TCHAR szContDeskManager[MAX_PATH];
 	LoadString(hInstance, IDS_DESK_CONTENT_MANAGER, (TCHAR*)szContDeskManager, sizeof(szContDeskManager) / sizeof(TCHAR));
@@ -191,8 +189,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 /* Main Window Procedures */
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static CRITICAL_SECTION s_criticalSection;
 	static HINSTANCE hInstance;							// instance to program
-	static HINSTANCE shared_Dll = NULL;				// handle to instance of shared dll
+	static HMODULE hSharedLib = NULL;				// handle to instance of shared dll
 	static TCHAR szOrginalWallpaper[MAX_PATH];		// hold orginal desktop wallpaper
 	static BOOL bAlwaysOnTop = TRUE;						// hold status of check field "Always on top"
 	static CTray* tray = NULL;
@@ -205,6 +204,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
+					  InitializeCriticalSection(&s_criticalSection);
+
 					  hInstance = ((LPCREATESTRUCT)lParam)->hInstance;
 
 					  memset(szOrginalWallpaper, 0, sizeof (szOrginalWallpaper));
@@ -228,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  }
 
 						  SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*)szDefaultPluginName, _tcslen(szDefaultPluginName));
-						  _tcscpy(pluginGUI.szPluginPath, szDefaultPluginName);	// Set plugin path
+						  g_PluginUI.SetFullPath(szDefaultPluginName);	// Set plugin path
 					  }
 					  else	// configuration already exists in registry 
 					  {
@@ -243,19 +244,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							  }
 						  }
 
-						  TCHAR szDllPath[MAX_PATH];
-						  memset(szDllPath, 0, sizeof (szDllPath));
+						  TCHAR szLibFullPath[MAX_PATH];
+						  memset(szLibFullPath, 0, sizeof (TCHAR) * MAX_PATH);
 
-						  GetFromRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, szDllPath, MAX_PATH);
-						  _tcscpy(pluginGUI.szPluginPath, szDllPath);	// Set plugin path
+						  if (GetFromRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, szLibFullPath, MAX_PATH))
+						  {
+							  g_PluginUI.SetFullPath(szLibFullPath);	// Set plugin path
+						  }
 						  if (_tcslen(windowsOnDesktop[0].szWallpaper) > 0)
 						  {
 							  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[0].szWallpaper), windowsOnDesktop[0].szWallpaper, 0);
 						  }
 					  }
 
-					  shared_Dll = LoadPlugin(DESKTOP_MGR_SZ);	// load shared library
-					  if (!shared_Dll)
+					  hSharedLib = LoadLibrary(DESKTOP_MGR_SZ);	// load shared library
+					  if (!hSharedLib)
 					  {
 						  TCHAR szAppName[MAX_PATH];
 						  LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
@@ -266,7 +269,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  MessageBox(NULL, szErrDeskManager, szAppName, MB_OK);
 					  }
 
-					  if (!GetPlugin(hPlugin, pluginGUI.szPluginPath, pluginGUI.PluginOpenDlgFun, pluginGUI.PluginCloseDlgFun))	// load GUI plugin
+					  if (!g_PluginUI.LoadAll(g_PluginUI.GetFullPath()))	// load GUI plugin
 					  {
 						  TCHAR szAppName[MAX_PATH];
 						  LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
@@ -291,24 +294,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						 {
 						 case WM_LBUTTONDOWN:
 						 {
-												BOOL visible = FALSE;
-												if (pluginGUI.hWnd)
-												{
-													visible = IsWindowVisible(pluginGUI.hWnd);
-												}
-												if (!visible)
-												{
-													if (hPlugin != NULL)
-													{
-														pluginGUI.hWnd = pluginGUI.PluginOpenDlgFun(hwnd, shared_Dll);
-														UpdateWindow(pluginGUI.hWnd);
-													}
-												}
+												HWND hDlg = g_PluginUI.m_pfOpenDlg(hwnd, hSharedLib);
+												break;
 						 }
-							 break;
 						 case WM_RBUTTONDOWN:
-							 CreatePopupMenuInTray(hwnd, bAlwaysOnTop);
-							 break;
+						 {
+												CreatePopupMenuInTray(hwnd, bAlwaysOnTop);
+												break;
+						 }
 						 }
 						 return 0;
 	}
@@ -345,53 +338,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 														 break;
 									 }
 									 default:
-										 break;
+									 {
+												break;
+									 }
 									 }
 					  }
 					  default:
-						  break;
+					  {
+								 break;
+					  }
 					  }
 					  return 0;
 	}
 	case WM_CHANGE_DESKTOP:	// lParam - no. of desktop
 	{
-								SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[lParam].szWallpaper), windowsOnDesktop[lParam].szWallpaper, 0);
+								EnterCriticalSection(&s_criticalSection);
+								INT ret = 0;
 
-								HideWindows(hwnd, pluginGUI.hWnd, windowsOnDesktop[GetCurrentDesktop()].table, TRUE);
-
-								INT icon = 0;	// id of icon in tray
-
-								// WARNING!!! Work only if icons in resources are in ascending sequence!
-								tray->ChangeIcon(LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
-
-								SetCurrentDesktop(lParam);
-
-								ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
-
-								if (bAlwaysOnTop)
+								if ((lParam >= 0) && (lParam < DESKTOPS))
 								{
-									if (hPlugin != NULL)
-									{
-										if (pluginGUI.hWnd)
-										{
-											BOOL visible = FALSE;
+									SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[lParam].szWallpaper), windowsOnDesktop[lParam].szWallpaper, 0);
+									HideWindows(hwnd, windowsOnDesktop[GetCurrentDesktop()].table, TRUE);
+									// WARNING!!! Work only if icons in resources are in ascending sequence!
+									tray->ChangeIcon(LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
 
-											visible = IsWindowVisible(pluginGUI.hWnd);
-											if (visible)
-											{
-												UpdateWindow(pluginGUI.hWnd);
-											}
-										}
-									}
+									SetCurrentDesktop(lParam);
+
+									ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
+									if (bAlwaysOnTop) g_PluginUI.m_pfOpenDlg(hwnd, hSharedLib);
+									else g_PluginUI.m_pfCloseDlg();
 								}
-								else
-								{
-									if (pluginGUI.hWnd != NULL)
-									{
-										pluginGUI.PluginCloseDlgFun(pluginGUI.hWnd);
-										pluginGUI.hWnd = NULL;
-									}
-								}
+								else ret = ERR_DESKTOP_NUM;
+
+								LeaveCriticalSection(&s_criticalSection);
+
 								return 0;
 	}
 	case WM_COMMAND:
@@ -405,7 +385,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   }
 					   case CMD_DSKMGR:
 					   {
-										  GetWindowsFromDesktop(hwnd, pluginGUI.hWnd, windowsOnDesktop[GetCurrentDesktop()].table);
+										  GetWindowsFromDesktop(hwnd, windowsOnDesktop[GetCurrentDesktop()].table);
 										  WindowsOnDesktop wod = {};
 										  for (vHandleItor itor = windowsOnDesktop[GetCurrentDesktop()].table.begin(); itor != windowsOnDesktop[GetCurrentDesktop()].table.end();)
 										  {
@@ -421,7 +401,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 										  }
 										  if (DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)windowsOnDesktop))
 										  {
-											  HideWindows(hwnd, pluginGUI.hWnd, wod.table, FALSE);
+											  HideWindows(hwnd, wod.table, FALSE);
 											  ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
 											  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[GetCurrentDesktop()].szWallpaper), windowsOnDesktop[GetCurrentDesktop()].szWallpaper, 0);
 										  }
@@ -466,11 +446,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_ENDSESSION:
 	case WM_DESTROY:
 	{
-					   if (hPlugin)
-					   {
-						   pluginGUI.PluginCloseDlgFun(pluginGUI.hWnd);
-					   }
-
 					   for (int i = 0; i < DESKTOPS; i++)
 					   {
 						   memset(szWallpaper, 0, sizeof (szWallpaper));
@@ -479,7 +454,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						   SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, (VOID*)windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
 					   }
 					   //Save plugin path in registry
-					   SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*)pluginGUI.szPluginPath, _tcslen(pluginGUI.szPluginPath));
+					   SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*)g_PluginUI.GetFullPath(), _tcslen(g_PluginUI.GetFullPath()));
 
 					   tray->Hide();
 
@@ -493,12 +468,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					   SetCurrentDesktop(0);
 
-					   FreePlugin(hPlugin);
-					   hPlugin = NULL;
-					   pluginGUI.PluginCloseDlgFun = NULL;
-					   pluginGUI.PluginOpenDlgFun = NULL;
+					   FreeLibrary(hSharedLib);
 
-					   FreePlugin(shared_Dll);
+					   DeleteCriticalSection(&s_criticalSection);
 
 					   PostQuitMessage(0);
 					   return 0;

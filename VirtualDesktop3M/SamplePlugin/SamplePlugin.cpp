@@ -20,7 +20,8 @@
 #define BUTTON_ID0	10000	//id of first desktop-button
 #define DESKTOPS_ON_PAGE	5	//no. of desktop-buttons on page
 
-static HINSTANCE hPlugin = NULL;
+static HINSTANCE g_hPlugin = NULL;
+static HWND g_hWnd = NULL;
 
 
 BOOL APIENTRY DllMain( HANDLE hModule,
@@ -28,7 +29,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
                        LPVOID lpReserved
 					 )
 {
-	hPlugin = (HINSTANCE) hModule;
+	g_hPlugin = (HINSTANCE)hModule;
     return TRUE;
 }
 
@@ -36,18 +37,29 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
-extern "C" __declspec(dllexport) HWND __stdcall MakeDialog (HWND hwnd, HANDLE hDll)
+extern "C" __declspec(dllexport) HWND __stdcall MakeDialog(HWND hwnd, HANDLE hSharedLib)
 {
-	return CreateDialog (hPlugin, MAKEINTRESOURCE (IDD_DIALOG_TRANSPARENT), hwnd, PluginProc);
+	if (!g_hWnd)
+	{
+		g_hWnd = CreateDialog(g_hPlugin, MAKEINTRESOURCE(IDD_DIALOG_TRANSPARENT), hwnd, PluginProc);
+	}
+	UpdateWindow(g_hWnd);
+
+	return g_hWnd;
 }
 
 
-extern "C" __declspec(dllexport) VOID __stdcall CloseDialog (HWND hDialog)
+extern "C" __declspec(dllexport) BOOL __stdcall CloseDialog()
 {
-	if (hDialog)
+	BOOL ret = FALSE;
+
+	if (g_hWnd)
 	{
-		DestroyWindow (hDialog);
+		ret = DestroyWindow (g_hWnd);
+		g_hWnd = NULL;	//just in case if .exe will try to use that
 	}
+
+	return ret;
 }
 
 
@@ -231,7 +243,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (id == IDCANCEL)
 		{
-			DestroyWindow (properties.hwnd);
+			CloseDialog();
 		}
 		else if ((id >= BUTTON_ID0) && (id < (BUTTON_ID0+DESKTOPS)))
 		{

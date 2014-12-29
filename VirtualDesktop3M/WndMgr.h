@@ -15,19 +15,17 @@ extern WindowsOnDesktop windowsOnDesktop[DESKTOPS];
  * Function get all windows from desktop
  * @return number of windows
  * @param hApp handle to application
- * @param hPlug handle to plugin window
  * @param table of windows handle to hide
  */
-INT GetWindowsFromDesktop (HWND hApp, HWND hPlug, vHandle& table);
+INT GetWindowsFromDesktop (HWND hApp, vHandle& table);
 
 /**
  * Function hide windows
  * @return number of hided windows
  * @param hApp handle to application
- * @param hPlug handle to plugin window
  * @param table of windows handle to hide
  */
-INT HideWindows (HWND hApp, HWND hPlug, vHandle& table, BOOL update);
+INT HideWindows (HWND hApp, vHandle& table, BOOL update);
 
 /**
  * Function show windows
