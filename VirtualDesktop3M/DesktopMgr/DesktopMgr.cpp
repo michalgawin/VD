@@ -4,11 +4,10 @@
  */
 
 
-#include <windows.h>
-#include "resource.h"
 #include "DesktopMgr.h"
-#include "..\Sys.h"
-#include "..\VirtualDesktop.h"
+#include "resource.h"
+#include "VirtualDesktop.h"
+#include "WndMgr.h"
 
 
 #pragma data_seg(".ASHARE")
@@ -60,7 +59,7 @@ extern "C" __declspec(dllexport) INT __stdcall GetCurrentDesktop ()
 extern "C" __declspec(dllexport) BOOL __stdcall ChangeDesktop (INT desktop)
 {
 	BOOL ret = FALSE;
-	HWND hwnd = FindWindowEx (NULL, NULL, szClassName, NULL);
+	HWND hwnd = FindApplication(szClassName);
 
 	if (hwnd != NULL)
 	{

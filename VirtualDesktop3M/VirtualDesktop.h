@@ -11,20 +11,21 @@
 #define _WIN32_WINNT	0x0501 // need for SetLayeredWindowAttributes
 
 #include <windows.h>
-#include <tchar.h>
 #include <stdio.h>
+#include <tchar.h>
 #include <vector>
 
 #include "resource.h"
 #include "Sys.h"
 
+
 #define DESKTOPS			5
 
-typedef std::vector<HWND> vHandle;
+typedef std::vector<HWND> vHandle;	/** Vector of applications' handles */
 typedef vHandle::iterator vHandleItor;
 
 /**
- * Structure contain information about windows on each desktop
+ * Structure store information about applications and wallpaper assigned to each desktop
  */
 typedef struct __WindowsOnDesktop
 {
@@ -39,6 +40,9 @@ typedef struct __WindowsOnDesktop
 #define PREV_WIN		1
 #define NEXT_WIN		2
 
+/**
+ * IDs for private errors
+ */
 #define ERR_DESKTOP_NUM	1
 
 

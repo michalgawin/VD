@@ -12,6 +12,13 @@
 extern WindowsOnDesktop windowsOnDesktop[DESKTOPS];
 
 /**
+* Check whether Virtual Desktop is running already
+* @return handle to window if works, NULL otherwise
+* @param clsName - windows class name
+*/
+HWND FindApplication(const TCHAR const * clsName);
+
+/**
  * Function get all windows from desktop
  * @return number of windows
  * @param hApp handle to application

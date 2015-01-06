@@ -51,7 +51,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,8
+ FILEVERSION 0,0,1,11
  PRODUCTVERSION 0,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -70,7 +70,7 @@ BEGIN
             VALUE "Comments", "v0.1"
             VALUE "CompanyName", "https://github.com/michalgawin"
             VALUE "FileDescription", "Desktop Manager"
-            VALUE "FileVersion", "0.0.1.8"
+            VALUE "FileVersion", "0.0.1.11"
             VALUE "InternalName", "Desktop Manager"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "DesktopMgr.dll"

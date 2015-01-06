@@ -21,25 +21,6 @@ WindowsOnDesktop windowsOnDesktop[DESKTOPS];			// Struct keeps data for each des
 
 extern CPlugin g_PluginUI;
 
-/* Function check did one of Virtual Desktop instance allready works
-* @return TRUE if works
-* @param clsName - windows class name
-*/
-BOOL isRunning(const TCHAR const * clsName)
-{
-	BOOL status = FALSE;
-	HWND hApp = NULL;
-
-	hApp = FindWindowEx(NULL, NULL, clsName, NULL);
-
-	if (hApp)
-	{
-		status = TRUE;
-	}
-
-	return status;
-}
-
 
 /**
 * Function show popup menu
@@ -113,7 +94,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	WNDCLASS wndclass;
 	memset(&wndclass, 0, sizeof (WNDCLASS));
 
-	if (isRunning(szClassName))
+	if (FindApplication(szClassName))
 	{
 		TCHAR szAppName[MAX_PATH];
 		LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
@@ -198,7 +179,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	TCHAR szWallpaper[MAX_PATH];							// string which is use to create bitmap
 	TCHAR szWallpaperTemplate[] = TEXT("Wallpaper#%d");		// wallpaper name template
-	TCHAR szDefaultPluginName[] = TEXT("SamplePlugin.dll");	// default plugin name
+	TCHAR szDefaultPluginName[] = SZ_PLUGIN_NAME;	// default plugin name
 
 	switch (uMsg)
 	{
@@ -257,7 +238,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  }
 					  }
 
-					  hSharedLib = LoadLibrary(DESKTOP_MGR_SZ);	// load shared library
+					  hSharedLib = LoadLibrary(SZ_DESKTOP_MGR);	// load shared library
 					  if (!hSharedLib)
 					  {
 						  TCHAR szAppName[MAX_PATH];
@@ -294,7 +275,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						 {
 						 case WM_LBUTTONDOWN:
 						 {
-												HWND hDlg = g_PluginUI.m_pfOpenDlg(hwnd, hSharedLib);
+												HWND hDlg = g_PluginUI.m_pfMakeDialog(hwnd, hSharedLib);
 												break;
 						 }
 						 case WM_RBUTTONDOWN:
@@ -365,14 +346,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									SetCurrentDesktop(lParam);
 
 									ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
-									if (bAlwaysOnTop) g_PluginUI.m_pfOpenDlg(hwnd, hSharedLib);
-									else g_PluginUI.m_pfCloseDlg();
+									if (bAlwaysOnTop) g_PluginUI.m_pfMakeDialog(hwnd, hSharedLib);
+									else g_PluginUI.m_pfCloseDialog();
 								}
 								else ret = ERR_DESKTOP_NUM;
 
 								LeaveCriticalSection(&s_criticalSection);
 
-								return 0;
+								return ret;
 	}
 	case WM_COMMAND:
 	{

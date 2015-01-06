@@ -8,17 +8,10 @@
 #include <windowsx.h>
 #include "resource.h"
 #include "SamplePlugin.h"
-#include "..\VirtualDesktop.h"
-#include "..\DesktopMgr\DesktopMgr.h"
-#include "..\WndAttr.h"
+#include "VirtualDesktop.h"
+#include "DesktopMgr\DesktopMgr.h"
+#include "WndAttr.h"
 
-#define ID_TIMER    1
-
-#define WIDE_RATIO	8	//ratio of window to the screen
-#define HIGH_RATIO	3	//ratio of window to the screen
-
-#define BUTTON_ID0	10000	//id of first desktop-button
-#define DESKTOPS_ON_PAGE	5	//no. of desktop-buttons on page
 
 static HINSTANCE g_hPlugin = NULL;
 static HWND g_hWnd = NULL;
@@ -247,6 +240,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		else if ((id >= BUTTON_ID0) && (id < (BUTTON_ID0+DESKTOPS)))
 		{
+			BOOL ret = FALSE;
 			INT currDskID = GetCurrentDesktop ();
 			INT dskID = wParam - 10000;
 
@@ -270,8 +264,10 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				ReleaseDC (NULL, dcDesktop);
 				dcDesktop = NULL;
 
-				ChangeDesktop (dskID);
+				ret = ChangeDesktop (dskID);
 			}
+
+			return ret;
 		}
 		}
 		return TRUE;

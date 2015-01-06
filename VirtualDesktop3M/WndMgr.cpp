@@ -6,6 +6,12 @@
 #include "WndMgr.h"
 
 
+HWND FindApplication(const TCHAR const * clsName)
+{
+	return FindWindowEx(NULL, NULL, clsName, NULL);
+}
+
+
 INT GetWindowsFromDesktop (HWND hApp, vHandle& table)
 {
 	HWND hDesktop = GetDesktopWindow();
@@ -26,20 +32,13 @@ INT GetWindowsFromDesktop (HWND hApp, vHandle& table)
 
 INT HideWindows (HWND hApp, vHandle& table, BOOL update)
 {
-	if (update)
-	{
-		GetWindowsFromDesktop (hApp, table);
-	}
-
-	HWND hPlug = GetWindow(hApp, GW_CHILD);
+	if (update) GetWindowsFromDesktop (hApp, table);
 
 	HDWP s = BeginDeferWindowPos (table.size());
-
 	for (vHandleItor itor = table.begin(); itor != table.end(); itor++)
 	{
 		s = DeferWindowPos (s, *itor, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
-
 	EndDeferWindowPos (s);
 
 	return table.size();

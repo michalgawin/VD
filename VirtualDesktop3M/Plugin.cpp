@@ -12,8 +12,8 @@ CPlugin::CPlugin()
 {
 	m_hLib = NULL;
 	m_szFullPath = NULL;
-	m_pfOpenDlg = NULL;
-	m_pfCloseDlg = NULL;
+	m_pfMakeDialog = NULL;
+	m_pfCloseDialog = NULL;
 }
 
 CPlugin::~CPlugin()
@@ -37,7 +37,7 @@ BOOL CPlugin::LoadAll(TCHAR* szFullPath)
 		{
 			if (Load())
 			{
-				if (GetFunc(ExFunNameMakeDialog, (VOID**)&m_pfOpenDlg) && GetFunc(ExFunNameCloseDialog, (VOID**)&m_pfCloseDlg))
+				if (GetFunc(ExFunNameMakeDialog, (VOID**)&m_pfMakeDialog) && GetFunc(ExFunNameCloseDialog, (VOID**)&m_pfCloseDialog))
 				{
 					ret = TRUE;
 				}
@@ -80,9 +80,9 @@ BOOL CPlugin::Load()
 
 VOID CPlugin::Unload()
 {
-	m_pfOpenDlg = NULL;
-	if (m_pfCloseDlg) m_pfCloseDlg();
-	m_pfCloseDlg = NULL;
+	m_pfMakeDialog = NULL;
+	if (m_pfCloseDialog) m_pfCloseDialog();
+	m_pfCloseDialog = NULL;
 
 	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
 	m_hLib = NULL;
@@ -137,7 +137,7 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 					 GetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), szFullPath, MAX_PATH);
 					 if (_tcslen(szFullPath) > 4)
 					 {
-						 g_PluginUI.m_pfCloseDlg();
+						 g_PluginUI.m_pfCloseDialog();
 						 g_PluginUI.LoadAll(szFullPath);
 					 }
 					 EndDialog(hDlg, TRUE);
