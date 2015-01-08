@@ -121,9 +121,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_P_DEF_DESKTOP_PREVIEW ">%d<"
-    IDS_P_GET_OBJ_ERR       "B³¹d=%d, status=%d, i=%d, bmp.bmWidth=%d, bmp.bmHeight=%d"
+    IDS_P_ERR_GET_OBJ       "B³¹d=%d, status=%d, i=%d, bmp.bmWidth=%d, bmp.bmHeight=%d"
     IDS_P_ERROR             "B³¹d"
-    IDS_P_CREATE_WINDOW_ERR "Nie mo¿na zainicjowaæ okna %s, kod b³êdu %d"
+    IDS_P_ERR_CREATE_WINDOW "Nie mo¿na zainicjowaæ okna %s, kod b³êdu %d"
+    IDS_P_WINDOW_NAME       "Pulpit#%d"
 END
 
 #endif    // Polish (Poland) resources

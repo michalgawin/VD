@@ -217,6 +217,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 						  pWOD = (pWindowsOnDesktop)lParam;
 						  temp_pWOD = new WindowsOnDesktop[DESKTOPS];
+						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  for (int i = 0; i < DESKTOPS; i++)
 						  {
@@ -237,10 +238,12 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 								  }
 							  }
 						  }
-						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
+
+						  TCHAR szWindowName[MAX_PATH];
+						  LoadString(hInstance, IDS_VD_MANAGER, (TCHAR*)szWindowName, sizeof (szWindowName) / sizeof (TCHAR));
+						  SetWindowText(hDlg, szWindowName);
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
-
 						  DrawTree(hTree, temp_pWOD);
 						  return TRUE;
 	}

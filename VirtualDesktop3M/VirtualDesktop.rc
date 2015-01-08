@@ -138,7 +138,6 @@ END
 
 IDD_DESKTOP_MANAGER DIALOGEX 0, 0, 186, 254
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Desktops Manager"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,233,50,14
@@ -243,6 +242,7 @@ BEGIN
     IDS_EXT_NAME_BMP        "Mapa bitowa (*.bmp)"
     IDS_ERR_POPUP_MENU      "Nie mo¿na stworzyæ kontekstowego menu: %d."
     IDS_PROPERTIES          "W³aœciwoœci"
+    IDS_VD_MANAGER          "Mened¿er Wirtualnych Pulpitów"
 END
 
 #endif    // Polish (Poland) resources

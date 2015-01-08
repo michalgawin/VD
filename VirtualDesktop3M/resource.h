@@ -40,6 +40,7 @@
 #define IDS_EXT_NAME_BMP                135
 #define IDS_ERR_POPUP_MENU              136
 #define IDS_PROPERTIES                  137
+#define IDS_VD_MANAGER                  138
 #define IDC_STATIC_0                    1000
 #define IDC_STATIC_1                    1001
 #define IDC_STATIC_2                    1002

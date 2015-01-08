@@ -17,6 +17,20 @@ static HINSTANCE g_hPlugin = NULL;
 static HWND g_hWnd = NULL;
 
 
+VOID SetWindowName(HWND hWnd)
+{
+	TCHAR szDesktopName[MAX_PATH];
+	LoadString((HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), IDS_P_WINDOW_NAME,
+		(TCHAR*)szDesktopName, sizeof (szDesktopName) / sizeof (TCHAR));
+
+	TCHAR szWindowName[MAX_PATH];
+	memset(szWindowName, 0, sizeof (szWindowName));
+	_stprintf(szWindowName, szDesktopName, GetCurrentDesktop());
+
+	SetWindowText(hWnd, szWindowName);
+}
+
+
 BOOL APIENTRY DllMain( HANDLE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
@@ -124,7 +138,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
 
 				TCHAR szCreateWindowError[MAX_PATH];
-				LoadString (hInstance, IDS_P_CREATE_WINDOW_ERR, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError) / sizeof (TCHAR));
+				LoadString (hInstance, IDS_P_ERR_CREATE_WINDOW, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError) / sizeof (TCHAR));
 
 				TCHAR szMsg[MAX_PATH];
 				memset (szMsg, 0, sizeof (szMsg));
@@ -179,7 +193,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			return FALSE;
 		}
-		
+
 		return TRUE;
 		}
 	case WM_TIMER:
@@ -279,6 +293,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (bmpID < DESKTOPS)
 		{
+			static INT lastDskID = -1; // to check whether last time was another desktop
 			INT currDskID = GetCurrentDesktop ();
 			BITMAP bmp;
 
@@ -287,7 +302,7 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			if (!status)
 			{
 				TCHAR szGetObjectError[MAX_PATH];
-				LoadString (hInstance, IDS_P_GET_OBJ_ERR, (TCHAR*) szGetObjectError, sizeof (szGetObjectError) / sizeof (TCHAR));
+				LoadString(hInstance, IDS_P_ERR_GET_OBJ, (TCHAR*)szGetObjectError, sizeof (szGetObjectError) / sizeof (TCHAR));
 
 				TCHAR szError[MAX_PATH];
 				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
@@ -329,6 +344,12 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				memDC = NULL;
 
 				ReleaseDC (hButton[bmpID], pdis->hDC);
+			}
+
+			if (currDskID != lastDskID)
+			{
+				SetWindowName(properties.hwnd);
+				lastDskID = currDskID;
 			}
 		}
 		
