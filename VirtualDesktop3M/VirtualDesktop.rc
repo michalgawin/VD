@@ -249,6 +249,57 @@ END
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_EXT_NAME_DLL        "Dynamic Library (*.dll)"
+    IDS_APP_NAME            "Virtual Desktop"
+    IDS_APP_AUTHOR          "Michal Gawin"
+    IDS_DEF_DESKTOP_PREVIEW "Desktop#%d"
+    IDS_APP_NO_NAME         "[No name] %Xh"
+    IDS_APP_LAST_INSTANCE   "This is the last instance of application. After removal of it you will lose access to application.\nDo you want to proceed?"
+    IDS_COPY                "Copy"
+    IDS_CUT                 "Cut"
+    IDS_PASTE               "Paste"
+    IDS_DELETE              "Delete"
+    IDS_ON_TOP              "Always on top"
+    IDS_DESK_CONTENT_MANAGER "Desktops' manager..."
+    IDS_PLUGIN              "Plugin..."
+    IDS_WALLPAPERS          "Wallpapers..."
+    IDS_ABOUT               "About..."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_QUIT                "Close"
+    IDS_APP_LAUNCHED        "Application is already running."
+    IDS_ERROR               "Error"
+    IDS_ERR_NOT_SUPPORTED_OS 
+                            "Application is not supported by this OS version."
+    IDS_ERR_NO_DESKTOP_MANAGER "Cannot load library to desktops management."
+    IDS_ERR_NO_PLUGIN       "Cannot load plugin."
+    IDS_EXIT_QUESTION       "Do you want to close application?"
+    IDS_EXT_NAME_BMP        "Bitmap (*.bmp)"
+    IDS_ERR_POPUP_MENU      "Cannot create context-menu: %d."
+    IDS_PROPERTIES          "Properties"
+    IDS_VD_MANAGER          "Virtual Desktops Manager"
+END
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

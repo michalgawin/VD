@@ -131,6 +131,31 @@ END
 /////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// English resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_P_DEF_DESKTOP_PREVIEW ">%d<"
+    IDS_P_ERR_GET_OBJ       "Error=%d, status=%d, i=%d, bmp.bmWidth=%d, bmp.bmHeight=%d"
+    IDS_P_ERROR             "Error"
+    IDS_P_ERR_CREATE_WINDOW "Cannot initialize the window %s, error code %d"
+    IDS_P_WINDOW_NAME       "Desktop#%d"
+END
+
+#endif    // English resources
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
