@@ -6,12 +6,10 @@
 #include "Plugin.h"
 
 
-CPlugin g_PluginUI;
-
 CPlugin::CPlugin()
 {
 	m_hLib = NULL;
-	m_szFullPath = NULL;
+	m_szFilePath = NULL;
 	m_pfMakeDialog = NULL;
 	m_pfCloseDialog = NULL;
 }
@@ -21,58 +19,40 @@ CPlugin::~CPlugin()
 	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
 	m_hLib = NULL;
 
-	if (m_szFullPath) delete[] m_szFullPath;
-	m_szFullPath = NULL;
+	if (m_szFilePath) delete[] m_szFilePath;
+	m_szFilePath = NULL;
 }
 
-BOOL CPlugin::LoadAll(TCHAR* szFullPath)
+
+VOID CPlugin::SetFile(TCHAR* szFilePath)
 {
-	BOOL ret = FALSE;
+	TCHAR* temp = m_szFilePath;
 
-	if (szFullPath)
+	if (szFilePath)
 	{
-		Unload();
-
-		if (SetFullPath(szFullPath))
-		{
-			if (Load())
-			{
-				if (GetFunc(ExFunNameMakeDialog, (VOID**)&m_pfMakeDialog) && GetFunc(ExFunNameCloseDialog, (VOID**)&m_pfCloseDialog))
-				{
-					ret = TRUE;
-				}
-			}
-		}
-	}
-
-	return ret;
-}
-
-TCHAR* CPlugin::SetFullPath(TCHAR* szFullPath)
-{
-	TCHAR* temp = m_szFullPath;
-
-	if (szFullPath)
-	{
-		INT len = _tcslen(szFullPath) + 1;
-		m_szFullPath = new TCHAR[len];
-		memset(m_szFullPath, 0, sizeof(TCHAR)* len);
-		_tcscpy(m_szFullPath, szFullPath);
+		INT len = _tcslen(szFilePath) + 1;
+		m_szFilePath = new TCHAR[len];
+		memset(m_szFilePath, 0, sizeof(TCHAR)* len);
+		_tcscpy(m_szFilePath, szFilePath);
 
 		if (temp) delete[] temp;
 		temp = NULL;
 	}
-
-	return m_szFullPath;
 }
 
-BOOL CPlugin::Load()
+BOOL CPlugin::Load(const char* szFuncOpenName, const char* szFuncCloseName)
 {
 	BOOL ret = FALSE;
 
-	if (m_szFullPath)
+	if (m_szFilePath)
 	{
-		if ((m_hLib = LoadLibrary(m_szFullPath))) ret = TRUE;
+		if ((m_hLib = LoadLibrary(m_szFilePath)))
+		{
+			if (GetFunc(szFuncOpenName, (VOID**)&m_pfMakeDialog) && GetFunc(szFuncCloseName, (VOID**)&m_pfCloseDialog))
+			{
+				ret = TRUE;
+			}
+		}
 	}
 
 	return ret;
@@ -81,7 +61,6 @@ BOOL CPlugin::Load()
 VOID CPlugin::Unload()
 {
 	m_pfMakeDialog = NULL;
-	if (m_pfCloseDialog) m_pfCloseDialog();
 	m_pfCloseDialog = NULL;
 
 	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
@@ -102,11 +81,13 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	static HINSTANCE hInstance;
 	static INT cxScreen;
 	static INT cyScreen;
+	static CPlugin* s_Plugin = NULL;
 
 	switch (message)
 	{
 	case WM_INITDIALOG:
 	{
+						  s_Plugin = (CPlugin*)lParam;
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  RECT rc;
@@ -122,7 +103,7 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 							  0,
 							  SWP_NOZORDER | SWP_NOSIZE);
 
-						  SetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), g_PluginUI.GetFullPath());
+						  SetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), s_Plugin->GetFile());
 
 						  return TRUE;
 	}
@@ -132,13 +113,15 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		case IDOK:
 		{
 					 TCHAR szFullPath[MAX_PATH];
-					 memset(szFullPath, 0, sizeof(TCHAR)*MAX_PATH);
+					 memset(szFullPath, 0, sizeof(szFullPath));
 
-					 GetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), szFullPath, MAX_PATH);
+					 GetWindowText(GetDlgItem(hDlg, IDC_PLUGIN_EDIT), szFullPath, _countof(szFullPath));
 					 if (_tcslen(szFullPath) > 4)
 					 {
-						 g_PluginUI.m_pfCloseDialog();
-						 g_PluginUI.LoadAll(szFullPath);
+						 s_Plugin->m_pfCloseDialog();
+						 s_Plugin->Unload();
+						 s_Plugin->SetFile(szFullPath);
+						 s_Plugin->Load();
 					 }
 					 EndDialog(hDlg, TRUE);
 					 return TRUE;
@@ -152,7 +135,7 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		{
 									 TCHAR ext_name[MAX_PATH];
 									 memset(ext_name, 0, sizeof (ext_name));
-									 LoadString(hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, sizeof (ext_name) / sizeof (TCHAR));
+									 LoadString(hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, _countof(ext_name));
 									 _tcscat(ext_name + _tcslen(ext_name) + 1, TEXT("*.dll"));
 
 									 OPENFILENAME ofn;
@@ -163,7 +146,7 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 									 ofn.hwndOwner = hDlg;
 									 ofn.lpstrFile = szFile;
 									 ofn.lpstrFile[0] = TEXT('\0');
-									 ofn.nMaxFile = sizeof(szFile) / sizeof(TCHAR);
+									 ofn.nMaxFile = _countof(szFile);
 									 ofn.lpstrFilter = ext_name;
 									 ofn.nFilterIndex = 1;
 									 ofn.lpstrFileTitle = NULL;

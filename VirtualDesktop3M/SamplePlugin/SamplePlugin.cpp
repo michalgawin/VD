@@ -15,13 +15,13 @@
 
 static HINSTANCE g_hPlugin = NULL;
 static HWND g_hWnd = NULL;
+static HINSTANCE g_hInstance = NULL;
 
 
 VOID SetWindowName(HWND hWnd)
 {
 	TCHAR szDesktopName[MAX_PATH];
-	LoadString((HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), IDS_P_WINDOW_NAME,
-		(TCHAR*)szDesktopName, sizeof (szDesktopName) / sizeof (TCHAR));
+	LoadString(g_hInstance, IDS_P_WINDOW_NAME, (TCHAR*)szDesktopName, sizeof (szDesktopName) / sizeof (TCHAR));
 
 	TCHAR szWindowName[MAX_PATH];
 	memset(szWindowName, 0, sizeof (szWindowName));
@@ -72,29 +72,28 @@ extern "C" __declspec(dllexport) BOOL __stdcall CloseDialog()
 
 BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	static INT cxImage = 0;									// width of bitmap
-	static INT cyImage = 0;									// height of bitmap
-	static HBITMAP hBmp[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// obtain image of each desktop
-	static HWND hButton[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// desktops' buttons
-	static WINDOWPOS properties;
-	static HINSTANCE hInstance;
-	static SCROLLINFO si;
+	static INT s_cxImage = 0;									// width of bitmap
+	static INT s_cyImage = 0;									// height of bitmap
+	static HBITMAP s_hBmp[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// obtain image of each desktop
+	static HWND s_hButton[DESKTOPS] = {NULL, NULL, NULL, NULL, NULL};	// desktops' buttons
+	static WINDOWPOS s_Wp;
+	static SCROLLINFO s_Si;
 
 
 	switch (message)
 	{
 	case WM_INITDIALOG:
 		{
-		properties.hwnd = hDlg;
-		properties.hwndInsertAfter = HWND_TOPMOST;
-		properties.flags = SWP_SHOWWINDOW;
+		s_Wp.hwnd = hDlg;
+		s_Wp.hwndInsertAfter = HWND_TOPMOST;
+		s_Wp.flags = SWP_SHOWWINDOW;
 
-		hInstance = (HINSTANCE) GetWindowLong (properties.hwnd, GWL_HINSTANCE);
+		g_hInstance = (HINSTANCE)GetWindowLong(s_Wp.hwnd, GWL_HINSTANCE);
 
-		properties.cx = GetSystemMetrics (SM_CXSCREEN) / WIDE_RATIO;
-		properties.cy = GetSystemMetrics (SM_CYSCREEN) / HIGH_RATIO;
+		s_Wp.cx = GetSystemMetrics(SM_CXSCREEN) / WIDE_RATIO;
+		s_Wp.cy = GetSystemMetrics(SM_CYSCREEN) / HIGH_RATIO;
 
-		if (!properties.x || !properties.y)
+		if (!s_Wp.x || !s_Wp.y)
 		{
 			HWND hStart = FindWindowEx (NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
 
@@ -106,19 +105,19 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				h = rcStart.bottom - rcStart.top;
 			}
 
-			properties.x = properties.cx*(WIDE_RATIO-1) - h;	//minus h do not cover vertical scrollbar
-			properties.y = properties.cy*(HIGH_RATIO-1) - h;	//minus h to do not cover start menu
+			s_Wp.x = s_Wp.cx*(WIDE_RATIO - 1) - h;	//minus h do not cover vertical scrollbar
+			s_Wp.y = s_Wp.cy*(HIGH_RATIO - 1) - h;	//minus h to do not cover start menu
 		}
 
-		SetWindowPos (properties.hwnd,
-					  properties.hwndInsertAfter,
-					  properties.x, properties.y,
-					  properties.cx, properties.cy,
-					  properties.flags);
+		SetWindowPos(s_Wp.hwnd,
+			s_Wp.hwndInsertAfter,
+			s_Wp.x, s_Wp.y,
+			s_Wp.cx, s_Wp.cy,
+			s_Wp.flags);
 
-		HDC wndDC = GetWindowDC (properties.hwnd);
-		cxImage = properties.cx;
-		cyImage = properties.cy / DESKTOPS_ON_PAGE;
+		HDC wndDC = GetWindowDC(s_Wp.hwnd);
+		s_cxImage = s_Wp.cx;
+		s_cyImage = s_Wp.cy / DESKTOPS_ON_PAGE;
 
 		for (unsigned int i = 0; i < DESKTOPS; i++)
 		{
@@ -126,19 +125,19 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			memset (szButtonName, 0, sizeof (szButtonName));
 			_stprintf (szButtonName, TEXT("#%d"), i);
 
-			hButton[i] = CreateWindow (TEXT("button"), szButtonName,
+			s_hButton[i] = CreateWindow (TEXT("button"), szButtonName,
 										WS_CHILD | WS_VISIBLE | BS_OWNERDRAW | WS_BORDER,
-										0, cyImage*i, properties.cx, cyImage,
-										properties.hwnd, (HMENU) (BUTTON_ID0+i), hInstance, NULL);
-			if (hButton[i] == NULL)
+										0, s_cyImage*i, s_Wp.cx, s_cyImage,
+										s_Wp.hwnd, (HMENU)(BUTTON_ID0 + i), g_hInstance, NULL);
+			if (s_hButton[i] == NULL)
 			{
 				DWORD err = GetLastError();
 
 				TCHAR szError[MAX_PATH];
-				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
+				LoadString (g_hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
 
 				TCHAR szCreateWindowError[MAX_PATH];
-				LoadString (hInstance, IDS_P_ERR_CREATE_WINDOW, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError) / sizeof (TCHAR));
+				LoadString (g_hInstance, IDS_P_ERR_CREATE_WINDOW, (TCHAR*) szCreateWindowError, sizeof (szCreateWindowError) / sizeof (TCHAR));
 
 				TCHAR szMsg[MAX_PATH];
 				memset (szMsg, 0, sizeof (szMsg));
@@ -147,11 +146,11 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				MessageBox(NULL, szMsg, szError, MB_OK);
 			}
 
-			HDC btnDC = GetWindowDC (hButton[i]);
-			if (hBmp[i] == NULL)
+			HDC btnDC = GetWindowDC (s_hButton[i]);
+			if (s_hBmp[i] == NULL)
 			{
 				TCHAR szDefDesktopPreview[MAX_PATH];
-				LoadString (hInstance, IDS_P_DEF_DESKTOP_PREVIEW, (TCHAR*) szDefDesktopPreview, sizeof (szDefDesktopPreview) / sizeof (TCHAR));
+				LoadString (g_hInstance, IDS_P_DEF_DESKTOP_PREVIEW, (TCHAR*) szDefDesktopPreview, sizeof (szDefDesktopPreview) / sizeof (TCHAR));
 
 				TCHAR szDesktop[MAX_PATH];
 				memset (szDesktop, 0, sizeof (szDesktop));
@@ -161,16 +160,16 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				GetTextExtentPoint32 (btnDC, szDesktop, _tcslen(szDesktop), &size);
 
 				HDC memDC = CreateCompatibleDC (btnDC);
-				hBmp[i] = CreateCompatibleBitmap (btnDC, size.cx, size.cy);
+				s_hBmp[i] = CreateCompatibleBitmap (btnDC, size.cx, size.cy);
 
-				HDC oldMemDC = (HDC)SelectObject (memDC, hBmp[i]);
+				HDC oldMemDC = (HDC)SelectObject (memDC, s_hBmp[i]);
 				TextOut (memDC, 0, 0, szDesktop, _tcslen(szDesktop));
 				SelectObject (memDC, oldMemDC);
 
 				DeleteDC (memDC);
 				memDC = NULL;
 			}
-			ReleaseDC (hButton[i], btnDC);
+			ReleaseDC (s_hButton[i], btnDC);
 			btnDC = NULL;
 		}
 
@@ -178,18 +177,18 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		wndDC = NULL;
 
 		RECT rc;
-		GetClientRect(properties.hwnd, &rc);
+		GetClientRect(s_Wp.hwnd, &rc);
 		
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_RANGE | SIF_PAGE;
-		si.nMin = 0;
-		si.nMax = cyImage * max(DESKTOPS, DESKTOPS_ON_PAGE);
-		si.nPage = rc.bottom - rc.top;
-		SetScrollInfo (properties.hwnd, SB_VERT, &si, TRUE);
+		s_Si.cbSize = sizeof(s_Si);
+		s_Si.fMask = SIF_RANGE | SIF_PAGE;
+		s_Si.nMin = 0;
+		s_Si.nMax = s_cyImage * max(DESKTOPS, DESKTOPS_ON_PAGE);
+		s_Si.nPage = rc.bottom - rc.top;
+		SetScrollInfo(s_Wp.hwnd, SB_VERT, &s_Si, TRUE);
 		
-		SetTimer (properties.hwnd, ID_TIMER, 250, NULL);
+		SetTimer(s_Wp.hwnd, ID_TIMER, 250, NULL);
 
-		if (MakeWindowTransparent (properties.hwnd, 120))	//it should be enough to read documents through it
+		if (MakeWindowTransparent(s_Wp.hwnd, 120))	//it should be enough to read documents through it
 		{
 			return FALSE;
 		}
@@ -197,50 +196,50 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 		}
 	case WM_TIMER:
-		InvalidateRect (hButton[GetCurrentDesktop ()], NULL, FALSE);
+		InvalidateRect (s_hButton[GetCurrentDesktop ()], NULL, FALSE);
 		return TRUE;
 	case WM_VSCROLL:
 		{
-		si.cbSize = sizeof(si);
-		si.fMask = SIF_ALL;
-		GetScrollInfo (properties.hwnd, SB_VERT, &si);
-		INT iVertPos = si.nPos;
+		s_Si.cbSize = sizeof(s_Si);
+		s_Si.fMask = SIF_ALL;
+		GetScrollInfo (s_Wp.hwnd, SB_VERT, &s_Si);
+		INT iVertPos = s_Si.nPos;
 
 		switch (LOWORD (wParam))
 		{
 		case SB_TOP:
-			si.nPos = si.nMin;
+			s_Si.nPos = s_Si.nMin;
 			break;
 		case SB_BOTTOM:
-			si.nPos = si.nMax;
+			s_Si.nPos = s_Si.nMax;
 			break;
 		case SB_LINEUP:
-			si.nPos -= 1;
+			s_Si.nPos -= 1;
 			break;
 		case SB_LINEDOWN:
-			si.nPos += 1;
+			s_Si.nPos += 1;
 			break;
 		case SB_PAGEUP:
-			si.nPos -= si.nPage;
+			s_Si.nPos -= s_Si.nPage;
 			break;
 		case SB_PAGEDOWN:
-			si.nPos += si.nPage;
+			s_Si.nPos += s_Si.nPage;
 			break;
 		case SB_THUMBTRACK:
-			si.nPos = si.nTrackPos;
+			s_Si.nPos = s_Si.nTrackPos;
 			break;
 		default:
 			break;
 		}
 
-		si.fMask = SIF_POS;
-		SetScrollInfo (properties.hwnd, SB_VERT, &si, TRUE);
-		GetScrollInfo (properties.hwnd, SB_VERT, &si);
+		s_Si.fMask = SIF_POS;
+		SetScrollInfo(s_Wp.hwnd, SB_VERT, &s_Si, TRUE);
+		GetScrollInfo(s_Wp.hwnd, SB_VERT, &s_Si);
 
-		if (si.nPos != iVertPos)
+		if (s_Si.nPos != iVertPos)
 		{                    
-			ScrollWindow (properties.hwnd, 0, iVertPos - si.nPos, NULL, NULL) ;
-			UpdateWindow (properties.hwnd) ;
+			ScrollWindow(s_Wp.hwnd, 0, iVertPos - s_Si.nPos, NULL, NULL);
+			UpdateWindow(s_Wp.hwnd);
 		}
 		}
 		return TRUE;
@@ -264,12 +263,12 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				HDC dcDesktop = GetWindowDC (NULL);
 
 				HDC memDC = CreateCompatibleDC (dcDesktop);
-				DeleteObject (hBmp[currDskID]);
-				hBmp[currDskID] = NULL;
-				hBmp[currDskID] = CreateCompatibleBitmap (dcDesktop, cxImage, cyImage);
+				DeleteObject (s_hBmp[currDskID]);
+				s_hBmp[currDskID] = NULL;
+				s_hBmp[currDskID] = CreateCompatibleBitmap (dcDesktop, s_cxImage, s_cyImage);
 
-				HDC oldMemDC = (HDC)SelectObject (memDC, hBmp[currDskID]);
-				StretchBlt (memDC, 0, 0, cxImage, cyImage, dcDesktop, 0, 0, GetSystemMetrics (SM_CXSCREEN), GetSystemMetrics (SM_CYSCREEN), SRCCOPY);
+				HDC oldMemDC = (HDC)SelectObject (memDC, s_hBmp[currDskID]);
+				StretchBlt (memDC, 0, 0, s_cxImage, s_cyImage, dcDesktop, 0, 0, GetSystemMetrics (SM_CXSCREEN), GetSystemMetrics (SM_CYSCREEN), SRCCOPY);
 				SelectObject (memDC, oldMemDC);
 				
 				DeleteDC (memDC);
@@ -297,15 +296,15 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 			INT currDskID = GetCurrentDesktop ();
 			BITMAP bmp;
 
-			INT status = GetObject (hBmp[bmpID], sizeof (BITMAP), &bmp);
+			INT status = GetObject (s_hBmp[bmpID], sizeof (BITMAP), &bmp);
 		
 			if (!status)
 			{
 				TCHAR szGetObjectError[MAX_PATH];
-				LoadString(hInstance, IDS_P_ERR_GET_OBJ, (TCHAR*)szGetObjectError, sizeof (szGetObjectError) / sizeof (TCHAR));
+				LoadString(g_hInstance, IDS_P_ERR_GET_OBJ, (TCHAR*)szGetObjectError, sizeof (szGetObjectError) / sizeof (TCHAR));
 
 				TCHAR szError[MAX_PATH];
-				LoadString (hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
+				LoadString (g_hInstance, IDS_P_ERROR, (TCHAR*) szError, sizeof (szError) / sizeof (TCHAR));
 
 				TCHAR szMsg[MAX_PATH];
 				memset (szMsg, 0, sizeof (szMsg));
@@ -321,12 +320,12 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					HDC dcDesktop = GetWindowDC (NULL);
 					memDC = CreateCompatibleDC (dcDesktop);
-					DeleteObject (hBmp[currDskID]);
-					hBmp[currDskID] = NULL;
-					hBmp[currDskID] = CreateCompatibleBitmap (dcDesktop, cxImage, cyImage);
-					oldMemDC = (HDC)SelectObject (memDC, hBmp[bmpID]);
+					DeleteObject (s_hBmp[currDskID]);
+					s_hBmp[currDskID] = NULL;
+					s_hBmp[currDskID] = CreateCompatibleBitmap (dcDesktop, s_cxImage, s_cyImage);
+					oldMemDC = (HDC)SelectObject (memDC, s_hBmp[bmpID]);
 
-					StretchBlt (memDC, 0, 0, cxImage, cyImage, dcDesktop, 0, 0, GetSystemMetrics (SM_CXSCREEN), GetSystemMetrics (SM_CYSCREEN), SRCCOPY);
+					StretchBlt (memDC, 0, 0, s_cxImage, s_cyImage, dcDesktop, 0, 0, GetSystemMetrics (SM_CXSCREEN), GetSystemMetrics (SM_CYSCREEN), SRCCOPY);
 
 					ReleaseDC (NULL, dcDesktop);
 					dcDesktop = NULL;
@@ -334,21 +333,21 @@ BOOL CALLBACK PluginProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				else
 				{
 					memDC = CreateCompatibleDC (pdis->hDC);
-					oldMemDC = (HDC)SelectObject (memDC, hBmp[bmpID]);
+					oldMemDC = (HDC)SelectObject (memDC, s_hBmp[bmpID]);
 				}
 		
-				StretchBlt (pdis->hDC, 0, 0, cxImage, cyImage, memDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+				StretchBlt (pdis->hDC, 0, 0, s_cxImage, s_cyImage, memDC, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
 				SelectObject (memDC, oldMemDC);
 				DeleteDC (memDC);
 				memDC = NULL;
 
-				ReleaseDC (hButton[bmpID], pdis->hDC);
+				ReleaseDC (s_hButton[bmpID], pdis->hDC);
 			}
 
 			if (currDskID != lastDskID)
 			{
-				SetWindowName(properties.hwnd);
+				SetWindowName(s_Wp.hwnd);
 				lastDskID = currDskID;
 			}
 		}

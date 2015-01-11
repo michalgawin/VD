@@ -8,33 +8,58 @@
 
 #include "VirtualDesktop.h"
 
-#define	VD_MAIN_KEY	TEXT("VirtualDesktop")
-#define	VD_PLUGIN_KEY	TEXT("Plugin")
-#define VD_PLUGIN_PATH_KEY	TEXT("PluginPath")
+#define	SZ_VD_MAIN_KEY	TEXT("Software\\VirtualDesktop")
+#define	SZ_VD_PLUGIN_KEY	TEXT("Plugin")
+#define SZ_VD_PLUGIN_PATH_KEY	TEXT("PluginPath")
 
-/**
- * Function init registry
- * @return TRUE if registry was initialized
- */
-BOOL IsRegistryEntry (TCHAR* branch, TCHAR* key, TCHAR* subkey);
+class CRegistry {
+private:
+	HKEY m_hKey = HKEY_CURRENT_USER;
+	TCHAR* m_szRootKey;
 
-/**
- * Function set new value in registry
- * @return TRUE if operation completed success
- * @param name new subkey in registry
- * @param value value placed in subkey
- * @param size rozmiar value
- */
-BOOL SetInRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, VOID* value, INT size);
+public:
+	/**
+	 * Handle registry key for application
+	 * @param hKey is one of the predefined keys
+	 * @szRootKey main key of application, all subkeys are relative to this one
+	 */
+	CRegistry(TCHAR* szRootKey);
 
-/**
- * Function get value from registry
- * @return TRUE if operation completed success
- * @param name name of subkey
- * @param value will keep value from subkey
- * @param size not used
- */
-BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCHAR* value, INT size);
+	~CRegistry();
 
+	/**
+	 * Check if registry entry is already created.
+	 * @return TRUE if registry exists, FALSE otherwise
+	 * @param szSubKey relative key of szRootKey to create
+	 */
+	BOOL Exists(TCHAR* szSubKey = NULL);
+
+	/**
+	* Create registry entry based on szRootKey and szSubKey.
+	* @return TRUE if registry exists, FALSE otherwise
+	* @param szSubKey relative key of szRootKey to create
+	*/
+	BOOL Create(TCHAR* szSubKey=NULL);
+
+	/**
+	 * Set new value in registry
+	 * @return TRUE if operation completed with success, FALSE otherwise
+	 * @param szValueName name of new value in registry
+	 * @param szData data of szValueName
+	 * @param iSize size in characters of szData
+	 * @param szSubKey sub key of szKey in registry
+	 */
+	BOOL Set(IN TCHAR* szValueName, IN VOID* szData, IN INT iSize, IN TCHAR* szSubKey=NULL);
+
+	/**
+	 * Function get value from registry
+	 * @return TRUE if operation completed with success, FALSE otherwise
+	 * @param szValueName name of value in registry
+	 * @param szData pointer in which data of szValueName will be stored
+	 * @param iSize szData buffer size in characters
+	 * @param szSubKey sub key of szKey in registry
+	 */
+	BOOL Get(IN TCHAR* szValueName, OUT TCHAR* szData, IN INT iSize, IN TCHAR* szSubKey=NULL);
+};
 
 #endif //_REG_H_VD_

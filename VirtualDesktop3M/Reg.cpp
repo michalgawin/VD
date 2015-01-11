@@ -6,127 +6,140 @@
 #include "Reg.h"
 
 
-BOOL IsRegistryEntry (TCHAR* branch, TCHAR* key, TCHAR* subkey)
+CRegistry::CRegistry(TCHAR* szRootKey)
 {
-	HKEY hKey = NULL;
-	BOOL status = FALSE;
-	TCHAR path[MAX_PATH];
-
-	memset (path, 0, sizeof (path));
-	_tcscpy (path, branch);
-	_tcscat (path, TEXT("\\"));
-	_tcscat (path, key);
-
-	if (RegOpenKeyEx (HKEY_CURRENT_USER, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-	{
-		status = TRUE;
-	}
-	else
-	{
-		if (RegOpenKeyEx (HKEY_CURRENT_USER, branch, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-		{
-			HKEY hKey2 = NULL;
-			if (RegCreateKeyEx (hKey, key, 0, NULL, 0, KEY_WRITE, NULL, &hKey2, NULL) == ERROR_SUCCESS)
-			{
-				HKEY hKey3 = NULL;
-				if (RegCreateKeyEx (hKey2, subkey, 0, NULL, 0, KEY_WRITE, NULL, &hKey3, NULL) == ERROR_SUCCESS)
-				{
-					RegCloseKey (hKey3);
-				}
-				RegCloseKey (hKey2);
-			}
-		}
-	}
-	RegCloseKey (hKey);
-
-	return status;
+	INT len = _tcslen(szRootKey) + 1;
+	m_szRootKey = new TCHAR[len];
+	memset(m_szRootKey, 0, len*sizeof(TCHAR));
+	_tcscpy(m_szRootKey, szRootKey);
 }
 
 
-BOOL SetInRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, VOID* value, INT size)
+CRegistry::~CRegistry()
 {
-	HKEY hKey = NULL;
-	BOOL status = FALSE;
-	LONG error = 0;
-	TCHAR path[MAX_PATH];
+	if (m_szRootKey) delete[] m_szRootKey;
+	m_szRootKey = NULL;
+}
 
-	memset (path, 0, sizeof (path));
-	_tcscpy (path, branch);
-	_tcscat (path, TEXT("\\"));
-	_tcscat (path, key);
-	if (subkey)
+
+BOOL CRegistry::Exists(TCHAR* szSubKey)
+{
+	BOOL bStatus = FALSE;
+	HKEY hKey = NULL;
+	TCHAR szPath[MAX_PATH];
+
+	memset(szPath, 0, sizeof (szPath));
+	_tcscpy(szPath, m_szRootKey);
+	if (szSubKey)
 	{
-		_tcscat (path, subkey);
+		_tcscat(szPath, TEXT("\\"));
+		_tcscat(szPath, szSubKey);
 	}
 
-	error = RegOpenKeyEx (HKEY_CURRENT_USER, path, 0, KEY_WRITE, &hKey);
-	if (error == ERROR_SUCCESS)
+	if (RegOpenKeyEx(m_hKey, szPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS) bStatus = TRUE;
+	RegCloseKey(hKey);
+
+	return bStatus;
+}
+
+
+BOOL CRegistry::Create(TCHAR* szSubKey)
+{
+	BOOL bStatus = FALSE;
+	HKEY hKey = NULL;
+	TCHAR szPath[MAX_PATH];
+
+	memset(szPath, 0, sizeof (szPath));
+	_tcscpy(szPath, m_szRootKey);
+	if (szSubKey)
+	{
+		_tcscat(szPath, TEXT("\\"));
+		_tcscat(szPath, szSubKey);
+	}
+
+	if (RegOpenKeyEx(m_hKey, NULL, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	{
+		HKEY hKey2 = NULL;
+		if (RegCreateKeyEx(hKey, szPath, 0, NULL, 0, KEY_WRITE, NULL, &hKey2, NULL) == ERROR_SUCCESS) bStatus = TRUE;
+		
+		RegCloseKey(hKey2);
+	}
+
+	return bStatus;
+}
+
+
+BOOL CRegistry::Set(TCHAR* szValueName, VOID* szData, INT iSize, TCHAR* szSubKey)
+{
+	BOOL bStatus = FALSE;
+	HKEY hKey = NULL;
+	TCHAR szPath[MAX_PATH];
+
+	memset(szPath, 0, sizeof (szPath));
+	_tcscpy(szPath, m_szRootKey);
+	if (szSubKey)
+	{
+		_tcscat(szPath, TEXT("\\"));
+		_tcscat(szPath, szSubKey);
+	}
+
+	if (RegOpenKeyEx(m_hKey, szPath, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
 	{
 		TCHAR szAscii[MAX_PATH];
-		memset (szAscii, 0, sizeof (szAscii));
-		
-		DWORD cbLength = _tcslen((TCHAR*) value) * sizeof (TCHAR);
-		error = RegSetValueEx (hKey, name, 0, REG_SZ, (const BYTE*) value, cbLength);
-		if (error == ERROR_SUCCESS)
-		{
-			status = TRUE;
-		}
+		memset(szAscii, 0, sizeof (szAscii));
 
-		RegCloseKey (hKey);
+		if (!Exists(szSubKey)) Create(szSubKey);
+		if (RegSetValueEx(hKey, szValueName, 0, REG_SZ, (const BYTE*)szData, iSize*sizeof(TCHAR)) == ERROR_SUCCESS) bStatus = TRUE;
+
+		RegCloseKey(hKey);
 	}
 
-	return status;
+	return bStatus;
 }
 
 
-BOOL GetFromRegistry (TCHAR* branch, TCHAR* key, TCHAR* subkey, TCHAR* name, TCHAR* value, INT size)
+BOOL CRegistry::Get(TCHAR* szValueName, TCHAR* szData, INT iSize, TCHAR* szSubKey)
 {
+	BOOL bStatus = FALSE;
 	HKEY hKey = NULL;
-	BOOL status = FALSE;
-	BYTE val[MAX_PATH];
-	ULONG s = MAX_PATH;
-	DWORD type = REG_SZ;
-	TCHAR path[MAX_PATH];
+	TCHAR szPath[MAX_PATH];
 
-	memset (path, 0, sizeof (TCHAR) * MAX_PATH);
-	_tcscpy (path, branch);
-	_tcscat (path, TEXT("\\"));
-	_tcscat (path, key);
-	if (subkey)
+	memset(szPath, 0, sizeof (szPath));
+	_tcscpy(szPath, m_szRootKey);
+	if (szSubKey)
 	{
-		_tcscat (path, subkey);
+		_tcscat(szPath, TEXT("\\"));
+		_tcscat(szPath, szSubKey);
 	}
 
-	if (RegOpenKeyEx (HKEY_CURRENT_USER, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	if (RegOpenKeyEx(m_hKey, szPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
 	{
-		if (RegQueryValueEx (hKey, name, 0, &type, val, &s) == ERROR_SUCCESS)
+		PSTR pMultiByteStr = new CHAR[MAX_PATH];
+		DWORD cchLength = MAX_PATH*sizeof(CHAR);
+		DWORD dwType = REG_SZ;
+
+		if (RegQueryValueEx(hKey, szValueName, NULL, &dwType, (PBYTE)pMultiByteStr, &cchLength) == ERROR_SUCCESS)
 		{
-			status = TRUE;
+			if (IsTextUnicode(szData, iSize, NULL))
+			{
+				PWSTR pWideCharStr;
+				int nLenOfWideCharStr;
+
+				nLenOfWideCharStr = MultiByteToWideChar(CP_ACP, 0, pMultiByteStr, cchLength, NULL, 0);
+				pWideCharStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, nLenOfWideCharStr*sizeof(wchar_t));
+				MultiByteToWideChar(CP_ACP, 0, pMultiByteStr, cchLength, pWideCharStr, nLenOfWideCharStr);
+
+				if (!wmemcpy_s(szData, iSize, pWideCharStr, nLenOfWideCharStr)) bStatus = TRUE;
+
+				HeapFree(GetProcessHeap(), 0, pWideCharStr);
+			}
+			else
+			{
+				if (!memcpy_s(szData, iSize, pMultiByteStr, cchLength)) bStatus = TRUE;
+			}
 		}
-
-		if (IsTextUnicode (value, size, NULL))
-		{
-			WCHAR wszVal[MAX_PATH];
-			memset (wszVal, 0, sizeof (WCHAR) * MAX_PATH);
-
-			MultiByteToWideChar (CP_ACP,
-								 0,
-								 (const char*) val,
-								 strlen ((const char*) val)+1,
-								 wszVal,
-								 sizeof (wszVal) / sizeof (WCHAR)
-								 );
-
-			memcpy (value, wszVal, sizeof (WCHAR) * MAX_PATH);
-			
-		}
-		else
-		{
-			memcpy (value, val, s);
-		}
-
-		RegCloseKey (hKey);
+		RegCloseKey(hKey);
 	}
 
-	return status;
+	return bStatus;
 }

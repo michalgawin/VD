@@ -222,7 +222,7 @@ BEGIN
     IDS_PASTE               "Wklej"
     IDS_DELETE              "Usuñ"
     IDS_ON_TOP              "Zawsze na wierzchu"
-    IDS_DESK_CONTENT_MANAGER "Zarz¹dzanie pulpitami..."
+    IDS_DESK_CONTENT_MANAGER "Zarz¹dzanie..."
     IDS_PLUGIN              "Wtyczka..."
     IDS_WALLPAPERS          "Tapety..."
     IDS_ABOUT               "O aplikacji..."
@@ -237,12 +237,12 @@ BEGIN
                             "Program nie jest wspierany przez t¹ wersjê systemu."
     IDS_ERR_NO_DESKTOP_MANAGER 
                             "Nie mo¿na za³adowaæ biblioteki do zarz¹dzania pulpitami."
-    IDS_ERR_NO_PLUGIN       "Nie mo¿na za³adowaæ wtyczki."
+    IDS_ERR_NO_PLUGIN       "Nie mo¿na za³adowaæ wtyczki (kod b³êdu %d)."
     IDS_EXIT_QUESTION       "Czy chcesz zamkn¹æ aplikacjê?"
     IDS_EXT_NAME_BMP        "Mapa bitowa (*.bmp)"
     IDS_ERR_POPUP_MENU      "Nie mo¿na stworzyæ kontekstowego menu: %d."
     IDS_PROPERTIES          "W³aœciwoœci"
-    IDS_VD_MANAGER          "Mened¿er Wirtualnych Pulpitów"
+    IDS_VD_MANAGER          "Mened¿er"
 END
 
 #endif    // Polish (Poland) resources
@@ -274,7 +274,7 @@ BEGIN
     IDS_PASTE               "Paste"
     IDS_DELETE              "Delete"
     IDS_ON_TOP              "Always on top"
-    IDS_DESK_CONTENT_MANAGER "Desktops' manager..."
+    IDS_DESK_CONTENT_MANAGER "Manager..."
     IDS_PLUGIN              "Plugin..."
     IDS_WALLPAPERS          "Wallpapers..."
     IDS_ABOUT               "About..."
@@ -288,7 +288,7 @@ BEGIN
     IDS_ERR_NOT_SUPPORTED_OS 
                             "Application is not supported by this OS version."
     IDS_ERR_NO_DESKTOP_MANAGER "Cannot load library to desktops management."
-    IDS_ERR_NO_PLUGIN       "Cannot load plugin."
+    IDS_ERR_NO_PLUGIN       "Cannot load plugin (error code %d)."
     IDS_EXIT_QUESTION       "Do you want to close application?"
     IDS_EXT_NAME_BMP        "Bitmap (*.bmp)"
     IDS_ERR_POPUP_MENU      "Cannot create context-menu: %d."

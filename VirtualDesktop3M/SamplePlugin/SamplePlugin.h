@@ -26,7 +26,7 @@
  */
 extern "C" __declspec(dllexport) HWND __stdcall MakeDialog (HWND hwnd, HANDLE hSharedLib);
 
-const char ExFunNameMakeDialog[] = "_MakeDialog@8";
+const char szExFunNameMakeDialog[] = "_MakeDialog@8";
 typedef HWND(__stdcall *t_pfMakeDialog) (HWND hwnd, HINSTANCE shared_DLL);
 
 /**
@@ -35,7 +35,7 @@ typedef HWND(__stdcall *t_pfMakeDialog) (HWND hwnd, HINSTANCE shared_DLL);
  */
 extern "C" __declspec(dllexport) BOOL __stdcall CloseDialog ();
 
-const char ExFunNameCloseDialog[] = "_CloseDialog@0";
+const char szExFunNameCloseDialog[] = "_CloseDialog@0";
 typedef BOOL(__stdcall *t_pfCloseDialog) ();
 
 #endif //_SAMPLE_PLUGIIN_H_VD_

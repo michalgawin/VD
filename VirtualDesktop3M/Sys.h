@@ -11,7 +11,7 @@
 #define SZ_DESKTOP_MGR		TEXT("DesktopMgr.dll")
 
 /** Default Plugin name */
-#define SZ_PLUGIN_NAME		TEXT("SamplePlugin.dll")
+#define SZ_DEFAULT_PLUGIN_NAME		TEXT("SamplePlugin.dll")
 
 /** main window class name */
 const TCHAR szClassName[] = TEXT("_VirtualDesktop_");

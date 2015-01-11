@@ -19,9 +19,6 @@
 
 WindowsOnDesktop windowsOnDesktop[DESKTOPS];			// Struct keeps data for each desktop
 
-extern CPlugin g_PluginUI;
-
-
 /**
 * Function show popup menu
 * @return TRUE if successfully created menu, otherwise return FALSE
@@ -46,27 +43,27 @@ BOOL CreatePopupMenuInTray(HWND hwnd, BOOL check)
 	}
 
 	TCHAR szOnTop[MAX_PATH];
-	LoadString(hInstance, IDS_ON_TOP, (TCHAR*)szOnTop, sizeof(szOnTop) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_ON_TOP, (TCHAR*)szOnTop, _countof(szOnTop));
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING | (check ? MF_CHECKED : MF_UNCHECKED), CMD_AOT, (LPCTSTR)szOnTop);
 
 	TCHAR szContDeskManager[MAX_PATH];
-	LoadString(hInstance, IDS_DESK_CONTENT_MANAGER, (TCHAR*)szContDeskManager, sizeof(szContDeskManager) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_DESK_CONTENT_MANAGER, (TCHAR*)szContDeskManager, _countof(szContDeskManager));
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_DSKMGR, (LPCTSTR)szContDeskManager);
 
 	TCHAR szPlugin[MAX_PATH];
-	LoadString(hInstance, IDS_PLUGIN, (TCHAR*)szPlugin, sizeof(szPlugin) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_PLUGIN, (TCHAR*)szPlugin, _countof(szPlugin));
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_PLUGIN, (LPCTSTR)szPlugin);
 
 	AppendMenu(menu, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 	TCHAR szAbout[MAX_PATH];
-	LoadString(hInstance, IDS_ABOUT, (TCHAR*)szAbout, sizeof(szAbout) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_ABOUT, (TCHAR*)szAbout, _countof(szAbout));
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_ABOUT, (LPCTSTR)szAbout);
 
 	AppendMenu(menu, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
 
 	TCHAR szQuit[MAX_PATH];
-	LoadString(hInstance, IDS_QUIT, (TCHAR*)szQuit, sizeof(szQuit) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_QUIT, (TCHAR*)szQuit, _countof(szQuit));
 	AppendMenu(menu, MF_BYPOSITION | MF_STRING, CMD_QUIT, (LPCTSTR)szQuit);
 
 	SetMenuDefaultItem(menu, CMD_DSKMGR, FALSE);
@@ -97,10 +94,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	if (FindApplication(szClassName))
 	{
 		TCHAR szAppName[MAX_PATH];
-		LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
+		LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
 
 		TCHAR szAppLaunched[MAX_PATH];
-		LoadString(hInstance, IDS_APP_LAUNCHED, (TCHAR*)szAppLaunched, sizeof(szAppLaunched) / sizeof(TCHAR));
+		LoadString(hInstance, IDS_APP_LAUNCHED, (TCHAR*)szAppLaunched, _countof(szAppLaunched));
 
 		MessageBox(NULL, szAppLaunched, szAppName, MB_OK);
 		return -1;
@@ -125,17 +122,17 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	if (!RegisterClass(&wndclass))
 	{
 		TCHAR szError[MAX_PATH];
-		LoadString(hInstance, IDS_ERROR, (TCHAR*)szError, sizeof(szError) / sizeof(TCHAR));
+		LoadString(hInstance, IDS_ERROR, (TCHAR*)szError, _countof(szError));
 
 		TCHAR szNotSuppOS[MAX_PATH];
-		LoadString(hInstance, IDS_ERR_NOT_SUPPORTED_OS, (TCHAR*)szNotSuppOS, sizeof(szNotSuppOS) / sizeof(TCHAR));
+		LoadString(hInstance, IDS_ERR_NOT_SUPPORTED_OS, (TCHAR*)szNotSuppOS, _countof(szNotSuppOS));
 
 		MessageBox(NULL, szError, szNotSuppOS, MB_OK | MB_ICONERROR);
 		return -1;
 	}
 
 	TCHAR szAppName[MAX_PATH];
-	LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
+	LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
 
 	hwnd = CreateWindow(szClassName,
 		szAppName,
@@ -171,15 +168,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static CRITICAL_SECTION s_criticalSection;
-	static HINSTANCE hInstance;							// instance to program
-	static HMODULE hSharedLib = NULL;				// handle to instance of shared dll
-	static TCHAR szOrginalWallpaper[MAX_PATH];		// hold orginal desktop wallpaper
-	static BOOL bAlwaysOnTop = TRUE;						// hold status of check field "Always on top"
-	static CTray* tray = NULL;
+	static HINSTANCE s_hInstance;							// instance to program
+	static HMODULE s_hSharedLib = NULL;				// handle to instance of shared dll
+	static TCHAR s_szOrginalWallpaper[MAX_PATH];		// hold orginal desktop wallpaper
+	static BOOL s_bAlwaysOnTop = TRUE;						// hold status of check field "Always on top"
+	static CTray* s_Tray = NULL;
+	static CRegistry* s_Registry = NULL;
+	static CPlugin* s_Plugin = NULL;
 
-	TCHAR szWallpaper[MAX_PATH];							// string which is use to create bitmap
 	TCHAR szWallpaperTemplate[] = TEXT("Wallpaper#%d");		// wallpaper name template
-	TCHAR szDefaultPluginName[] = SZ_PLUGIN_NAME;	// default plugin name
 
 	switch (uMsg)
 	{
@@ -187,10 +184,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 					  InitializeCriticalSection(&s_criticalSection);
 
-					  hInstance = ((LPCREATESTRUCT)lParam)->hInstance;
+					  s_hInstance = ((LPCREATESTRUCT)lParam)->hInstance;
 
-					  memset(szOrginalWallpaper, 0, sizeof (szOrginalWallpaper));
-					  SystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, szOrginalWallpaper, 0);
+					  s_hSharedLib = LoadLibrary(SZ_DESKTOP_MGR);	// load shared library
+					  if (!s_hSharedLib)
+					  {
+						  TCHAR szAppName[MAX_PATH];
+						  LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
+
+						  TCHAR szErrDeskManager[MAX_PATH];
+						  LoadString(s_hInstance, IDS_ERR_NO_DESKTOP_MANAGER, (TCHAR*)szErrDeskManager, _countof(szErrDeskManager));
+
+						  MessageBox(NULL, szErrDeskManager, szAppName, MB_OK);
+					  }
+
+					  memset(s_szOrginalWallpaper, 0, _countof(s_szOrginalWallpaper)*sizeof(TCHAR));
+					  SystemParametersInfo(SPI_GETDESKWALLPAPER, _countof(s_szOrginalWallpaper), s_szOrginalWallpaper, 0);
 
 					  for (int i = 0; i < DESKTOPS; i++)
 					  {
@@ -198,19 +207,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  memset(windowsOnDesktop[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
 					  }
 
-					  if (!IsRegistryEntry(TEXT("Software"), VD_MAIN_KEY, VD_PLUGIN_KEY))	// create entry in registry
+					  s_Plugin = new CPlugin();
+					  s_Registry = new CRegistry(SZ_VD_MAIN_KEY);
+
+					  TCHAR szWallpaper[MAX_PATH];
+					  if (!s_Registry->Exists())	// create entry in registry
 					  {
+						  s_Registry->Create();
+
 						  for (int i = 0; i < DESKTOPS; i++)
 						  {
 							  memset(szWallpaper, 0, sizeof (szWallpaper));
 							  _stprintf(szWallpaper, szWallpaperTemplate, i);
 
-							  SystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, windowsOnDesktop[i].szWallpaper, 0);
-							  SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, (VOID*)windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
+							  if (SystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, windowsOnDesktop[i].szWallpaper, 0))
+							  {
+								  s_Registry->Set(szWallpaper, (VOID*)windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
+							  }
 						  }
 
-						  SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*)szDefaultPluginName, _tcslen(szDefaultPluginName));
-						  g_PluginUI.SetFullPath(szDefaultPluginName);	// Set plugin path
+						  s_Registry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)SZ_DEFAULT_PLUGIN_NAME, _tcslen(SZ_DEFAULT_PLUGIN_NAME));
+						  s_Plugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);	// Set plugin path
+
+						  if (!s_Registry->Exists(SZ_VD_PLUGIN_PATH_KEY)) s_Registry->Create(SZ_VD_PLUGIN_PATH_KEY);
 					  }
 					  else	// configuration already exists in registry 
 					  {
@@ -219,50 +238,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							  memset(szWallpaper, 0, sizeof (szWallpaper));
 							  _stprintf(szWallpaper, szWallpaperTemplate, i);
 
-							  if (!GetFromRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, windowsOnDesktop[i].szWallpaper, MAX_PATH))
+							  if (!s_Registry->Get(szWallpaper, windowsOnDesktop[i].szWallpaper, MAX_PATH))
 							  {
 								  SystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, windowsOnDesktop[i].szWallpaper, 0);
 							  }
 						  }
 
 						  TCHAR szLibFullPath[MAX_PATH];
-						  memset(szLibFullPath, 0, sizeof (TCHAR) * MAX_PATH);
+						  memset(szLibFullPath, 0, sizeof (TCHAR)*_countof(szLibFullPath));
 
-						  if (GetFromRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, szLibFullPath, MAX_PATH))
+						  if (s_Registry->Get(SZ_VD_PLUGIN_PATH_KEY, szLibFullPath, _countof(szLibFullPath))) s_Plugin->SetFile(szLibFullPath);	// Set plugin path
+						  else s_Plugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);
+
+						  if (_tcslen(windowsOnDesktop[GetCurrentDesktop()].szWallpaper) > 0)
 						  {
-							  g_PluginUI.SetFullPath(szLibFullPath);	// Set plugin path
-						  }
-						  if (_tcslen(windowsOnDesktop[0].szWallpaper) > 0)
-						  {
-							  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[0].szWallpaper), windowsOnDesktop[0].szWallpaper, 0);
+							  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[GetCurrentDesktop()].szWallpaper), windowsOnDesktop[GetCurrentDesktop()].szWallpaper, 0);
 						  }
 					  }
 
-					  hSharedLib = LoadLibrary(SZ_DESKTOP_MGR);	// load shared library
-					  if (!hSharedLib)
+					  if (!s_Plugin->Load())	// load GUI plugin
 					  {
 						  TCHAR szAppName[MAX_PATH];
-						  LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
-
-						  TCHAR szErrDeskManager[MAX_PATH];
-						  LoadString(hInstance, IDS_ERR_NO_DESKTOP_MANAGER, (TCHAR*)szErrDeskManager, sizeof(szErrDeskManager) / sizeof(TCHAR));
-
-						  MessageBox(NULL, szErrDeskManager, szAppName, MB_OK);
-					  }
-
-					  if (!g_PluginUI.LoadAll(g_PluginUI.GetFullPath()))	// load GUI plugin
-					  {
-						  TCHAR szAppName[MAX_PATH];
-						  LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
+						  LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
 
 						  TCHAR szNoPlugin[MAX_PATH];
-						  LoadString(hInstance, IDS_ERR_NO_PLUGIN, (TCHAR*)szNoPlugin, sizeof(szNoPlugin) / sizeof(TCHAR));
+						  LoadString(s_hInstance, IDS_ERR_NO_PLUGIN, (TCHAR*)szNoPlugin, _countof(szNoPlugin));
+						  TCHAR szMessage[MAX_PATH];
+						  _stprintf(szMessage, szNoPlugin, GetLastError());
 
-						  MessageBox(NULL, szNoPlugin, szAppName, MB_OK);
+						  MessageBox(NULL, szMessage, szAppName, MB_OK);
 					  }
 
-					  tray = new CTray(hwnd, hInstance, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON)));
-					  tray->Show();
+					  s_Tray = new CTray(hwnd, s_hInstance, LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON)));
+					  s_Tray->Show();
+
 					  return 0;
 	}
 	case WM_PARENTNOTIFY:	// notification while children DestroyWindow
@@ -275,12 +284,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						 {
 						 case WM_LBUTTONDOWN:
 						 {
-												HWND hDlg = g_PluginUI.m_pfMakeDialog(hwnd, hSharedLib);
+												HWND hDlg = s_Plugin->m_pfMakeDialog(hwnd, s_hSharedLib);
 												break;
 						 }
 						 case WM_RBUTTONDOWN:
 						 {
-												CreatePopupMenuInTray(hwnd, bAlwaysOnTop);
+												CreatePopupMenuInTray(hwnd, s_bAlwaysOnTop);
 												break;
 						 }
 						 }
@@ -341,13 +350,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(windowsOnDesktop[lParam].szWallpaper), windowsOnDesktop[lParam].szWallpaper, 0);
 									HideWindows(hwnd, windowsOnDesktop[GetCurrentDesktop()].table, TRUE);
 									// WARNING!!! Work only if icons in resources are in ascending sequence!
-									tray->ChangeIcon(LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
+									s_Tray->ChangeIcon(LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
 
 									SetCurrentDesktop(lParam);
 
 									ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
-									if (bAlwaysOnTop) g_PluginUI.m_pfMakeDialog(hwnd, hSharedLib);
-									else g_PluginUI.m_pfCloseDialog();
+									if (s_bAlwaysOnTop) s_Plugin->m_pfMakeDialog(hwnd, s_hSharedLib);
+									else s_Plugin->m_pfCloseDialog();
 								}
 								else ret = ERR_DESKTOP_NUM;
 
@@ -361,7 +370,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   {
 					   case CMD_AOT:
 					   {
-									   bAlwaysOnTop = !bAlwaysOnTop;
+									   s_bAlwaysOnTop = !s_bAlwaysOnTop;
 									   break;
 					   }
 					   case CMD_DSKMGR:
@@ -380,7 +389,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 												  itor = windowsOnDesktop[GetCurrentDesktop()].table.erase(itor++);
 											  }
 										  }
-										  if (DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)windowsOnDesktop))
+										  if (DialogBoxParam(s_hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)windowsOnDesktop))
 										  {
 											  HideWindows(hwnd, wod.table, FALSE);
 											  ShowWindows(windowsOnDesktop[GetCurrentDesktop()].table);
@@ -390,12 +399,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   }
 					   case CMD_PLUGIN:
 					   {
-										  DialogBox(hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc);
+										  DialogBoxParam(s_hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc, (LPARAM)s_Plugin);
+										  //DialogBox(hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc);
 										  break;
 					   }
 					   case CMD_ABOUT:
 					   {
-										 DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgAboutProc);
+										 DialogBox(s_hInstance, MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hwnd, DlgAboutProc);
 										 break;
 					   }
 					   case CMD_QUIT:
@@ -414,10 +424,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CLOSE: // catch ALT+F4 to prevent hide tray icon
 	{
 					   TCHAR szAppName[MAX_PATH];
-					   LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, sizeof(szAppName) / sizeof(TCHAR));
+					   LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
 
 					   TCHAR szExitQuestion[MAX_PATH];
-					   LoadString(hInstance, IDS_EXIT_QUESTION, (TCHAR*)szExitQuestion, sizeof(szExitQuestion) / sizeof(TCHAR));
+					   LoadString(s_hInstance, IDS_EXIT_QUESTION, (TCHAR*)szExitQuestion, _countof(szExitQuestion));
 					   if (MessageBox(NULL, szExitQuestion, szAppName, MB_YESNO) == IDYES)
 					   {
 						   SendMessage(hwnd, WM_DESTROY, 0, 0);
@@ -427,19 +437,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_ENDSESSION:
 	case WM_DESTROY:
 	{
+					   TCHAR szWallpaper[MAX_PATH];
 					   for (int i = 0; i < DESKTOPS; i++)
 					   {
 						   memset(szWallpaper, 0, sizeof (szWallpaper));
 						   _stprintf(szWallpaper, szWallpaperTemplate, i);
 
-						   SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, szWallpaper, (VOID*)windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
+						   s_Registry->Set(szWallpaper, (VOID*)windowsOnDesktop[i].szWallpaper, _tcslen(windowsOnDesktop[i].szWallpaper));
 					   }
 					   //Save plugin path in registry
-					   SetInRegistry(TEXT("Software"), VD_MAIN_KEY, NULL, VD_PLUGIN_PATH_KEY, (VOID*)g_PluginUI.GetFullPath(), _tcslen(g_PluginUI.GetFullPath()));
+					   s_Registry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)s_Plugin->GetFile(), _tcslen(s_Plugin->GetFile()));
 
-					   tray->Hide();
+					   s_Tray->Hide();
 
-					   SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(szOrginalWallpaper), szOrginalWallpaper, 0);
+					   SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(s_szOrginalWallpaper), s_szOrginalWallpaper, 0);
 
 					   for (int i = 0; i < DESKTOPS; i++)
 					   {
@@ -449,7 +460,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					   SetCurrentDesktop(0);
 
-					   FreeLibrary(hSharedLib);
+					   FreeLibrary(s_hSharedLib);
 
 					   DeleteCriticalSection(&s_criticalSection);
 

@@ -14,7 +14,7 @@ class CPlugin
 {
 private:
 	HMODULE m_hLib;		//handle to library (dll)
-	TCHAR* m_szFullPath;	//full path, including file name, to library
+	TCHAR* m_szFilePath;	//full path, including file name, to library
 
 public:
 	t_pfMakeDialog m_pfMakeDialog;	//pointer to function which creates window
@@ -23,13 +23,12 @@ public:
 public:
 	CPlugin();
 	~CPlugin();
-	BOOL LoadAll(TCHAR* szFullPath);
-	TCHAR* SetFullPath(TCHAR* szFullPath);
-	TCHAR* GetFullPath() { return m_szFullPath; };
+	BOOL Load(IN const char* szFuncOpenName = szExFunNameMakeDialog, IN const char* szFuncCloseName = szExFunNameCloseDialog);
+	VOID Unload();
+	VOID SetFile(TCHAR* szFilePath);
+	TCHAR* GetFile() { return m_szFilePath; };
 
 private:
-	BOOL Load();
-	VOID Unload();
 	BOOL GetFunc(IN const char* szFuncName, OUT VOID** pFun);
 };
 

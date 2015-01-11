@@ -15,7 +15,8 @@ int _tmain(int argc, _TCHAR* argv[])
 TEST(PluginTest, LoadPluginLibrary)
 {
 	CPlugin Library;
-	Library.LoadAll(SZ_PLUGIN_NAME);
+	Library.SetFile(SZ_DEFAULT_PLUGIN_NAME);
+	Library.Load();
 	ASSERT_TRUE((Library.m_pfMakeDialog != NULL) && (Library.m_pfCloseDialog != NULL));
 	Library.~CPlugin();
 }
@@ -23,7 +24,8 @@ TEST(PluginTest, LoadPluginLibrary)
 TEST(PluginTest, OpenPluginWindow)
 {
 	CPlugin Library;
-	Library.LoadAll(SZ_PLUGIN_NAME);
+	Library.SetFile(SZ_DEFAULT_PLUGIN_NAME);
+	Library.Load();
 	ASSERT_TRUE((Library.m_pfMakeDialog != NULL) && (Library.m_pfCloseDialog != NULL));
 
 	HWND hWnd = Library.m_pfMakeDialog(NULL, NULL);
@@ -34,7 +36,8 @@ TEST(PluginTest, OpenPluginWindow)
 TEST(PluginTest, ClosePluginWindow)
 {
 	CPlugin Library;
-	Library.LoadAll(SZ_PLUGIN_NAME);
+	Library.SetFile(SZ_DEFAULT_PLUGIN_NAME);
+	Library.Load();
 	ASSERT_TRUE((Library.m_pfMakeDialog != NULL) && (Library.m_pfCloseDialog != NULL));
 
 	HWND hWnd = Library.m_pfMakeDialog(NULL, NULL);
@@ -47,7 +50,8 @@ TEST(PluginTest, ClosePluginWindow)
 TEST(PluginTest, ChangeDesktop)
 {
 	CPlugin Library;
-	Library.LoadAll(SZ_PLUGIN_NAME);
+	Library.SetFile(SZ_DEFAULT_PLUGIN_NAME);
+	Library.Load();
 	ASSERT_TRUE((Library.m_pfMakeDialog != NULL) && (Library.m_pfCloseDialog != NULL));
 
 	HWND hWnd = Library.m_pfMakeDialog(FindWindowEx(NULL, NULL, szClassName, NULL), NULL);
