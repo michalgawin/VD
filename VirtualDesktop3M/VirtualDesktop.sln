@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DesktopMgr_UnitTests", "Des
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SamplePlugin_UnitTests", "SamplePlugin\SamplePlugin_UnitTests.vcxproj", "{F5AE3E59-6BD2-42E2-B737-3F3CFA94CDBB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDesktop_UnitTests", "VirtualDesktop_UnitTests.vcxproj", "{4321DEBC-EE20-496F-9F4B-1208F0550E6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,10 @@ Global
 		{F5AE3E59-6BD2-42E2-B737-3F3CFA94CDBB}.Debug|Win32.Build.0 = Debug|Win32
 		{F5AE3E59-6BD2-42E2-B737-3F3CFA94CDBB}.Release|Win32.ActiveCfg = Release|Win32
 		{F5AE3E59-6BD2-42E2-B737-3F3CFA94CDBB}.Release|Win32.Build.0 = Release|Win32
+		{4321DEBC-EE20-496F-9F4B-1208F0550E6D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4321DEBC-EE20-496F-9F4B-1208F0550E6D}.Debug|Win32.Build.0 = Debug|Win32
+		{4321DEBC-EE20-496F-9F4B-1208F0550E6D}.Release|Win32.ActiveCfg = Release|Win32
+		{4321DEBC-EE20-496F-9F4B-1208F0550E6D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

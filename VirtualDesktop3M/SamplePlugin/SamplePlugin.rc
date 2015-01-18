@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,15
- PRODUCTVERSION 0,1,0,0
+ FILEVERSION 0,0,1,17
+ PRODUCTVERSION 0,1,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,12 +70,12 @@ BEGIN
             VALUE "Comments", "v0.1"
             VALUE "CompanyName", "https://github.com/michalgawin"
             VALUE "FileDescription", "SamplePlugin"
-            VALUE "FileVersion", "0.0.1.15"
+            VALUE "FileVersion", "0.0.1.17"
             VALUE "InternalName", "Sample Plugin"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "SamplePlugin.dll"
             VALUE "ProductName", "VD"
-            VALUE "ProductVersion", "0.1.0.0"
+            VALUE "ProductVersion", "0.1.1.0"
         END
     END
     BLOCK "VarFileInfo"

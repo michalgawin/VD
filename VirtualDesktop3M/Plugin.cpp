@@ -21,6 +21,9 @@ CPlugin::~CPlugin()
 
 	if (m_szFilePath) delete[] m_szFilePath;
 	m_szFilePath = NULL;
+
+	m_pfMakeDialog = NULL;
+	m_pfCloseDialog = NULL;
 }
 
 
@@ -33,7 +36,7 @@ VOID CPlugin::SetFile(TCHAR* szFilePath)
 		INT len = _tcslen(szFilePath) + 1;
 		m_szFilePath = new TCHAR[len];
 		memset(m_szFilePath, 0, sizeof(TCHAR)* len);
-		_tcscpy(m_szFilePath, szFilePath);
+		_tcscpy_s(m_szFilePath, len, szFilePath);
 
 		if (temp) delete[] temp;
 		temp = NULL;
@@ -60,11 +63,11 @@ BOOL CPlugin::Load(const char* szFuncOpenName, const char* szFuncCloseName)
 
 VOID CPlugin::Unload()
 {
-	m_pfMakeDialog = NULL;
-	m_pfCloseDialog = NULL;
-
 	if (m_hLib) FreeLibrary((HMODULE)m_hLib);
 	m_hLib = NULL;
+
+	m_pfMakeDialog = NULL;
+	m_pfCloseDialog = NULL;
 }
 
 BOOL CPlugin::GetFunc(const char* szFuncName, VOID** pFun)
@@ -136,7 +139,7 @@ BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 									 TCHAR ext_name[MAX_PATH];
 									 memset(ext_name, 0, sizeof (ext_name));
 									 LoadString(hInstance, IDS_EXT_NAME_DLL, (TCHAR*)ext_name, _countof(ext_name));
-									 _tcscat(ext_name + _tcslen(ext_name) + 1, TEXT("*.dll"));
+									 _tcscat_s(ext_name + _tcslen(ext_name) + 1, _countof(ext_name), TEXT("*.dll"));
 
 									 OPENFILENAME ofn;
 									 TCHAR szFile[MAX_PATH];

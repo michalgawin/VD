@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F5AE3E59-6BD2-42E2-B737-3F3CFA94CDBB}</ProjectGuid>
+    <ProjectGuid>{4321DEBC-EE20-496F-9F4B-1208F0550E6D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SamplePlugin_UnitTests</RootNamespace>
+    <RootNamespace>VirtualDesktop_UnitTests</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,17 +41,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)..\gtest\;</IncludePath>
-    <SourcePath>$(VC_SourcePath);$(SolutionDir);</SourcePath>
     <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)\$(Configuration)\</OutDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\gtest\;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir);$(SolutionDir)..\gtest\;</IncludePath>
-    <SourcePath>$(VC_SourcePath);$(SolutionDir);</SourcePath>
     <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(SolutionDir)\$(Configuration)\</OutDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)..\gtest\;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -60,6 +56,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -75,6 +72,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,16 +85,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Plugin.h" />
-    <ClInclude Include="SamplePlugin.h" />
-    <ClInclude Include="SamplePluginTests.h" />
+    <ClInclude Include="CPluginTests.h" />
+    <ClInclude Include="Plugin.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\gtest\gtest-all.cc" />
-    <ClCompile Include="..\Plugin.cpp" />
-    <ClCompile Include="SamplePluginTests.cpp" />
-    <ClCompile Include="SamplePlugin_UnitTests.cpp" />
+    <ClCompile Include="..\gtest\gtest-all.cc" />
+    <ClCompile Include="CPluginTests.cpp" />
+    <ClCompile Include="Plugin.cpp" />
+    <ClCompile Include="VirtualDesktop_UnitTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

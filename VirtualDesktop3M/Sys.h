@@ -55,10 +55,10 @@ const TCHAR szClassName[] = TEXT("_VirtualDesktop_");
 #define CMD_TREE_PASTE	(CMD_TREE_CUT + 1)
 
 /** id represents delete node from tree popup menu */
-#define CMD_TREE_DELETE	(CMD_TREE_PASTE+1)
+#define CMD_TREE_DELETE	(CMD_TREE_PASTE + 1)
 
 /** id represents properties node from tree popup menu */
-#define CMD_TREE_PROPERTIES (CMD_TREE_DELETE+1)
+#define CMD_TREE_PROPERTIES (CMD_TREE_DELETE + 1)
 
 
 #endif //_SYS_H_VD_
