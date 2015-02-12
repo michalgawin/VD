@@ -49,6 +49,7 @@ extern "C" __declspec(dllexport) HWND __stdcall MakeDialog(HWND hwnd, HANDLE hSh
 	if (!g_hWnd)
 	{
 		g_hWnd = CreateDialog(g_hPlugin, MAKEINTRESOURCE(IDD_DIALOG_TRANSPARENT), hwnd, PluginProc);
+		SetWindowName(g_hWnd);
 	}
 	UpdateWindow(g_hWnd);
 

@@ -59,7 +59,7 @@ extern "C" __declspec(dllexport) INT __stdcall GetCurrentDesktop ()
 extern "C" __declspec(dllexport) BOOL __stdcall ChangeDesktop (INT desktop)
 {
 	BOOL ret = FALSE;
-	HWND hwnd = FindApplication(szClassName);
+	HWND hwnd = CDesktop::FindApplication(szClassName);
 
 	if (hwnd != NULL)
 	{

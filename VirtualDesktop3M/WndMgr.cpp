@@ -6,64 +6,169 @@
 #include "WndMgr.h"
 
 
-HWND FindApplication(const TCHAR const * clsName)
+CDesktopsManager::CDesktopsManager(int nDesktops)
+{
+	m_vpDesktop.clear();
+	for (int i = 0; i < nDesktops; i++) m_vpDesktop.push_back(new CDesktop());
+}
+
+
+CDesktopsManager::~CDesktopsManager()
+{
+	m_vpDesktop.clear();
+}
+
+
+BOOL CDesktopsManager::AddDesktop()
+{
+	m_vpDesktop.push_back(new CDesktop());
+	return TRUE;
+}
+
+
+BOOL CDesktopsManager::RemoveDesktop(int nDesktop)
+{
+	m_vpDesktop.erase(m_vpDesktop.begin() + nDesktop);
+	return TRUE;
+}
+
+
+pCDesktop CDesktopsManager::operator[](INT nDesktop)
+{
+	if ((nDesktop >= 0) && (nDesktop < m_vpDesktop.size()))
+		return m_vpDesktop[nDesktop];
+	else
+		return NULL;
+}
+
+
+CDesktop::CDesktop() : m_szWallpaper(NULL)
+{
+	m_vApp.clear();
+}
+
+
+CDesktop::CDesktop(CDesktop& org)
+{
+	m_vApp.clear();
+	for (t_vHWNDItor itor = org.m_vApp.begin(); itor != org.m_vApp.end();)
+	{
+		if (IsWindow(*itor))
+		{
+			m_vApp.push_back(*itor);
+			itor++;
+		}
+		else
+		{
+			itor = org.m_vApp.erase(itor++);
+		}
+	}
+}
+
+
+CDesktop::~CDesktop()
+{
+	m_vApp.clear();
+
+	if (m_szWallpaper) delete[] m_szWallpaper;
+	m_szWallpaper = NULL;
+}
+
+
+CDesktop& CDesktop::operator = (CDesktop& right)
+{
+	if (this != &right)
+	{
+		m_vApp.clear();
+		for (t_vHWNDItor itor = right.m_vApp.begin(); itor != right.m_vApp.end();)
+		{
+			if (IsWindow(*itor))
+			{
+				m_vApp.push_back(*itor);
+				itor++;
+			}
+			else
+			{
+				itor = right.m_vApp.erase(itor++);
+			}
+		}
+
+		SetWallpaper(right.GetWallpaper());
+	}
+
+	return *this;
+}
+
+
+void CDesktop::SetWallpaper(TCHAR* szWallpaper)
+{
+	if (m_szWallpaper) delete[] m_szWallpaper;
+	m_szWallpaper = NULL;
+
+	INT iLen = _tcslen(szWallpaper) + 1;
+	m_szWallpaper = new TCHAR[iLen];
+	_tcscpy_s(m_szWallpaper, iLen, szWallpaper);
+}
+
+
+HWND CDesktop::FindApplication(const TCHAR const * clsName)
 {
 	return FindWindowEx(NULL, NULL, clsName, NULL);
 }
 
 
-INT GetWindowsFromDesktop(HWND hApp, vHandle& table)
+INT CDesktop::GetWindowsFromDesktop(HWND hApp)
 {
 	HWND hDesktop = GetDesktopWindow();
 	HWND hTaskBar = FindWindowEx(NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
 	HWND hDesktopIcon = FindWindowEx(NULL, NULL, TEXT("Progman"), NULL);	// icons "My Computer" etc.
 
-	table.clear();
+	m_vApp.clear();
 
 	for (HWND hWindowTop = GetTopWindow(hDesktop); hWindowTop; hWindowTop = GetWindow(hWindowTop, GW_HWNDNEXT))
 	{
 		if (IsWindowVisible(hWindowTop) && GetParent(hWindowTop) != hApp && hWindowTop != hTaskBar && hWindowTop != hDesktop && hWindowTop != hDesktopIcon && hWindowTop != hApp && GetParent(hWindowTop) != hTaskBar)
-			table.push_back(hWindowTop);
+			m_vApp.push_back(hWindowTop);
 	}
 
-	return table.size();
+	return m_vApp.size();
 }
 
 
-INT HideWindows(HWND hApp, vHandle& table, BOOL update)
+INT CDesktop::HideWindows(HWND hApp, BOOL update)
 {
-	if (update) GetWindowsFromDesktop(hApp, table);
+	if (update) GetWindowsFromDesktop(hApp);
 
-	HDWP s = BeginDeferWindowPos(table.size());
-	for (vHandleItor itor = table.begin(); itor != table.end(); itor++)
+	HDWP s = BeginDeferWindowPos(m_vApp.size());
+	for (t_vHWNDItor itor = m_vApp.begin(); itor != m_vApp.end(); itor++)
 	{
 		s = DeferWindowPos(s, *itor, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
 	EndDeferWindowPos(s);
 
-	return table.size();
+	return m_vApp.size();
 }
 
 
-INT ShowWindows(vHandle& table)
+INT CDesktop::ShowWindows()
 {
-	for (vHandleItor itor = table.begin(); itor != table.end();)
+	for (t_vHWNDItor itor = m_vApp.begin(); itor != m_vApp.end();)
 	{
 		//If window not exists (e.g. process was closed from task manager) remove handle from table
 		if (!IsWindow(*itor))
 		{
-			itor = table.erase(itor++);
+			itor = m_vApp.erase(itor++);
 		}
 		else
 			itor++;
 	}
 
-	HDWP s = BeginDeferWindowPos(table.size());
-	for (vHandleItor itor = table.begin(); itor != table.end(); itor++)
+	HDWP s = BeginDeferWindowPos(m_vApp.size());
+	for (t_vHWNDItor itor = m_vApp.begin(); itor != m_vApp.end(); itor++)
 	{
 		s = DeferWindowPos(s, *itor, 0, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 	}
 	EndDeferWindowPos(s);
 
-	return table.size();
+	return m_vApp.size();
 }

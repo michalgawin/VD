@@ -21,19 +21,6 @@
 
 #define DESKTOPS			5
 
-typedef std::vector<HWND> vHandle;	/** Vector of applications' handles */
-typedef vHandle::iterator vHandleItor;
-
-/**
- * Structure store information about applications and wallpaper assigned to each desktop
- */
-typedef struct __WindowsOnDesktop
-{
-	vHandle table;
-	TCHAR *szWallpaper;						/** keep path to wallpaper */
-} WindowsOnDesktop, *pWindowsOnDesktop;
-
-
 /**
  * IDs for hot keys
  */

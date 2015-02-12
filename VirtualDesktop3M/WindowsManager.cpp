@@ -11,6 +11,7 @@
 #include "DesktopMgr\DesktopMgr.h"
 #include "WindowsManager.h"
 #include "Wallpaper.h"
+#include "WndMgr.h"
 
 
 VOID ShowPopupMenu(POINT point, HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
@@ -75,7 +76,7 @@ VOID ShowPopupMenu(POINT point, HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL
 }
 
 
-VOID DrawTree(HWND hTree, pWindowsOnDesktop pWOD)
+VOID DrawTree(HWND hTree, pCDesktopsManager pDskMgr)
 {
 	HIMAGELIST hIml;
 	HBITMAP hBmp;
@@ -104,7 +105,7 @@ VOID DrawTree(HWND hTree, pWindowsOnDesktop pWOD)
 			TreeView_SetImageList(hTree, hIml, TVSIL_NORMAL);
 	}
 
-	for (int i = 0; i < DESKTOPS; i++)
+	for (int i = 0; i < pDskMgr->GetDesktopsNumber(); i++)
 	{
 		TCHAR szDesktopNum[MAX_PATH];
 		LoadString(hInstance, IDS_DEF_DESKTOP_PREVIEW, (TCHAR*)szDesktopNum, sizeof(szDesktopNum) / sizeof(TCHAR));
@@ -129,12 +130,12 @@ VOID DrawTree(HWND hTree, pWindowsOnDesktop pWOD)
 		tvis.hParent = tvis.hInsertAfter = TVI_ROOT;
 		tvis.item = tvi;
 		HTREEITEM hItem = TreeView_InsertItem(hTree, &tvis);
-
-		for (vHandleItor itor = pWOD[i].table.begin(); itor != pWOD[i].table.end();)
+		t_vHWND vApps = (*pDskMgr)[i]->GetApps();
+		for (t_vHWNDItor itor = vApps.begin(); itor != vApps.end();)
 		{
 			if (!IsWindow(*itor))
 			{
-				itor = pWOD[i].table.erase(itor++);
+				itor = vApps.erase(itor++);
 			}
 			else
 			{
@@ -201,8 +202,8 @@ INT FindItem(HWND hTreeView, HWND hWindow, HTREEITEM htiParent = NULL)
 BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static HINSTANCE hInstance;
-	static pWindowsOnDesktop pWOD = NULL;
-	static pWindowsOnDesktop temp_pWOD = NULL;
+	static pCDesktopsManager s_pDskMgr = NULL;
+	static pCDesktopsManager s_pDskMgr_mod = NULL;
 	static HWND	hTree = NULL;
 	static HWND hCopy = NULL;				//handle to window to copy
 	static BOOL bCut = FALSE;
@@ -215,28 +216,13 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 	case WM_INITDIALOG:
 	{
-						  pWOD = (pWindowsOnDesktop)lParam;
-						  temp_pWOD = new WindowsOnDesktop[DESKTOPS];
+						  s_pDskMgr = (pCDesktopsManager)lParam;
+						  s_pDskMgr_mod = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
-						  for (int i = 0; i < DESKTOPS; i++)
+						  for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
 						  {
-							  temp_pWOD[i].szWallpaper = new TCHAR[MAX_PATH];
-							  memset(temp_pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
-							  _tcscpy(temp_pWOD[i].szWallpaper, pWOD[i].szWallpaper);
-
-							  for (vHandleItor itor = pWOD[i].table.begin(); itor != pWOD[i].table.end();)
-							  {
-								  if (IsWindow(*itor))
-								  {
-									  temp_pWOD[i].table.push_back(*itor);
-									  itor++;
-								  }
-								  else
-								  {
-									  itor = pWOD[i].table.erase(itor++);
-								  }
-							  }
+							  *(*s_pDskMgr_mod)[i] = *(*s_pDskMgr)[i];
 						  }
 
 						  TCHAR szWindowName[MAX_PATH];
@@ -244,7 +230,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 						  SetWindowText(hDlg, szWindowName);
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
-						  DrawTree(hTree, temp_pWOD);
+						  DrawTree(hTree, s_pDskMgr_mod);
 						  return TRUE;
 	}
 	case WM_MOUSEMOVE:
@@ -427,7 +413,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														   TreeView_GetItem(hTree, &tvi);
 
 														   INT iDesktop = (INT)tvi.lParam;
-														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)(temp_pWOD + iDesktop));
+														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)((*s_pDskMgr_mod)[iDesktop]));
 													   }
 												   }
 												   return TRUE;
@@ -440,44 +426,31 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 									int i;
 									for (i = 0, hCurrentRoot = TreeView_GetRoot(hTree); hCurrentRoot != NULL; hCurrentRoot = TreeView_GetNextItem(hTree, hCurrentRoot, TVGN_NEXT), i++)
 									{
-										memset(pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
-										_tcscpy(pWOD[i].szWallpaper, temp_pWOD[i].szWallpaper);
+										(*s_pDskMgr)[i]->SetWallpaper((*s_pDskMgr_mod)[i]->GetWallpaper());
 
-										pWOD[i].table.clear();
-
+										(*s_pDskMgr)[i]->ClearApps();
 										for (HTREEITEM hCurrentChild = TreeView_GetChild(hTree, hCurrentRoot); hCurrentChild != NULL; hCurrentChild = TreeView_GetNextItem(hTree, hCurrentChild, TVGN_NEXT))
 										{
 											TVITEM tvi;
 											tvi.mask = TVIF_HANDLE;
 											tvi.hItem = hCurrentChild;
 											TreeView_GetItem(hTree, &tvi);
-											pWOD[i].table.push_back((HWND)tvi.lParam);
+											(*s_pDskMgr)[i]->AddApp((HWND)tvi.lParam);
 										}
 									}
 
-									if (i != DESKTOPS)
+									if (i != s_pDskMgr->GetDesktopsNumber())
 									{
 										bRet = FALSE;
 									}
-									
-									for (int i = 0; i < DESKTOPS; i++)
-									{
-										delete[] temp_pWOD[i].szWallpaper;
-									}
-									delete[] temp_pWOD;
 
+									delete s_pDskMgr_mod;
 									EndDialog(hDlg, bRet);
-
 									return TRUE;
 					   }
 					   case IDCANCEL:
 					   {
-										for (int i = 0; i < DESKTOPS; i++)
-										{
-											delete[] temp_pWOD[i].szWallpaper;
-										}
-										delete[] temp_pWOD;
-
+										delete s_pDskMgr_mod;
 										EndDialog(hDlg, FALSE);
 										return TRUE;
 					   }
@@ -564,37 +537,17 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 										  {
 										  case VK_F5:
 										  {
-														BOOL status = ChangeDesktop(GetCurrentDesktop());		//update applications on current desktop
+														BOOL status = ChangeDesktop(GetCurrentDesktop());	//update applications on current desktop
 														if (status)
 														{
-															for (int i = 0; i < DESKTOPS; i++)
+															delete s_pDskMgr_mod;
+															s_pDskMgr_mod = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
+															for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
 															{
-																delete[] temp_pWOD[i].szWallpaper;
+																*(*s_pDskMgr_mod)[i] = *(*s_pDskMgr)[i];
 															}
-															delete[] temp_pWOD;
 
-															temp_pWOD = new WindowsOnDesktop[DESKTOPS];
-
-															for (int i = 0; i < DESKTOPS; i++)
-															{
-																temp_pWOD[i].szWallpaper = new TCHAR[MAX_PATH];
-																memset(temp_pWOD[i].szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
-																_tcscpy(temp_pWOD[i].szWallpaper, pWOD[i].szWallpaper);
-
-																for (vHandleItor itor = pWOD[i].table.begin(); itor != pWOD[i].table.end();)
-																{
-																	if (IsWindow(*itor))
-																	{
-																		temp_pWOD[i].table.push_back(*itor);
-																		itor++;
-																	}
-																	else
-																	{
-																		itor = pWOD[i].table.erase(itor++);
-																	}
-																}
-															}
-															DrawTree(hTree, temp_pWOD);
+															DrawTree(hTree, s_pDskMgr_mod);
 														}
 														else return FALSE;
 														break;

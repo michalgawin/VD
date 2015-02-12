@@ -3,7 +3,7 @@
  */
 
 
-#include "Reg.h"
+#include "Registry.h"
 
 
 CRegistry::CRegistry(TCHAR* szRootKey)

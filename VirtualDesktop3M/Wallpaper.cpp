@@ -4,6 +4,7 @@
 
 
 #include "Wallpaper.h"
+#include "WndMgr.h"
 
 
 BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -11,13 +12,13 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	static HINSTANCE hInstance;
 	static INT cxScreen;
 	static INT cyScreen;
-	static pWindowsOnDesktop pWOD = NULL;
+	static pCDesktop s_pDsk = NULL;
 
 	switch (message)
 	{
 	case WM_INITDIALOG:
 	{
-						  pWOD = (pWindowsOnDesktop)lParam;
+						  s_pDsk = (pCDesktop)lParam;
 
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
@@ -34,7 +35,7 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 							  0,
 							  SWP_NOZORDER | SWP_NOSIZE);
 
-						  SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), pWOD->szWallpaper);
+						  SetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), s_pDsk->GetWallpaper());
 
 						  return TRUE;
 	}
@@ -47,18 +48,20 @@ BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 					 TCHAR* szWallpaper2 = new TCHAR[MAX_PATH];
 					 GetWindowText(GetDlgItem(hDlg, IDC_WALL_EDIT0), szWallpaper2, MAX_PATH);
 
-					 if (_tcscmp(pWOD->szWallpaper, szWallpaper2))
+					 if (_tcscmp(s_pDsk->GetWallpaper(), szWallpaper2))
 					 {
-						 memset(pWOD->szWallpaper, 0, MAX_PATH * sizeof (TCHAR));
-						 _tcscpy(pWOD->szWallpaper, szWallpaper2);
+						 s_pDsk->SetWallpaper(szWallpaper2);
 						 bRet = TRUE;
 					 }
+
 					 EndDialog(hDlg, bRet);
 					 return TRUE;
 		}
 		case IDCANCEL:
+		{
 			EndDialog(hDlg, FALSE);
 			return TRUE;
+		}
 		case IDC_BUTTON_SEARCH0:
 		{
 								   TCHAR ext_name[MAX_PATH];
