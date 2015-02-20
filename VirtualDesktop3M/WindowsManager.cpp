@@ -11,7 +11,7 @@
 #include "DesktopMgr\DesktopMgr.h"
 #include "WindowsManager.h"
 #include "Wallpaper.h"
-#include "WndMgr.h"
+#include "DesktopsManager.h"
 
 
 VOID ShowPopupMenu(POINT point, HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)

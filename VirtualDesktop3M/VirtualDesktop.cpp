@@ -8,7 +8,7 @@
 #include "Sys.h"
 #include "Registry.h"
 #include "Tray.h"
-#include "WndMgr.h"
+#include "DesktopsManager.h"
 
 // Plugins
 #include "WindowsManager.h"

@@ -4,7 +4,7 @@
 
 
 #include "Wallpaper.h"
-#include "WndMgr.h"
+#include "DesktopsManager.h"
 
 
 BOOL CALLBACK DlgWallpaperProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

@@ -7,7 +7,7 @@
 #include "DesktopMgr.h"
 #include "resource.h"
 #include "VirtualDesktop.h"
-#include "WndMgr.h"
+#include "DesktopsManager.h"
 
 
 #pragma data_seg(".ASHARE")

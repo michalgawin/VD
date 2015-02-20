@@ -3,7 +3,7 @@
 */
 
 
-#include "WndMgr.h"
+#include "DesktopsManager.h"
 #include <algorithm>
 
 
