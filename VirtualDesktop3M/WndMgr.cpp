@@ -4,17 +4,19 @@
 
 
 #include "WndMgr.h"
+#include <algorithm>
 
 
 CDesktopsManager::CDesktopsManager(int nDesktops)
 {
-	m_vpDesktop.clear();
-	for (int i = 0; i < nDesktops; i++) m_vpDesktop.push_back(new CDesktop());
+	m_vpDesktop.resize(nDesktops);
+	std::generate(m_vpDesktop.begin(), m_vpDesktop.end(), []() { return new CDesktop(); });
 }
 
 
 CDesktopsManager::~CDesktopsManager()
 {
+	std::for_each(m_vpDesktop.begin(), m_vpDesktop.end(), [](pCDesktop pDsk) { delete pDsk; });
 	m_vpDesktop.clear();
 }
 
@@ -28,6 +30,7 @@ BOOL CDesktopsManager::AddDesktop()
 
 BOOL CDesktopsManager::RemoveDesktop(int nDesktop)
 {
+	delete m_vpDesktop[nDesktop];
 	m_vpDesktop.erase(m_vpDesktop.begin() + nDesktop);
 	return TRUE;
 }
@@ -50,19 +53,9 @@ CDesktop::CDesktop() : m_szWallpaper(NULL)
 
 CDesktop::CDesktop(CDesktop& org)
 {
-	m_vApp.clear();
-	for (t_vHWNDItor itor = org.m_vApp.begin(); itor != org.m_vApp.end();)
-	{
-		if (IsWindow(*itor))
-		{
-			m_vApp.push_back(*itor);
-			itor++;
-		}
-		else
-		{
-			itor = org.m_vApp.erase(itor++);
-		}
-	}
+	m_vApp.resize(org.m_vApp.size());
+	std::copy_if(org.m_vApp.begin(), org.m_vApp.end(), m_vApp.begin(), IsWindow);
+	SetWallpaper(org.GetWallpaper());
 }
 
 
@@ -79,20 +72,8 @@ CDesktop& CDesktop::operator = (CDesktop& right)
 {
 	if (this != &right)
 	{
-		m_vApp.clear();
-		for (t_vHWNDItor itor = right.m_vApp.begin(); itor != right.m_vApp.end();)
-		{
-			if (IsWindow(*itor))
-			{
-				m_vApp.push_back(*itor);
-				itor++;
-			}
-			else
-			{
-				itor = right.m_vApp.erase(itor++);
-			}
-		}
-
+		m_vApp.resize(right.m_vApp.size());
+		std::copy_if(right.m_vApp.begin(), right.m_vApp.end(), m_vApp.begin(), IsWindow);
 		SetWallpaper(right.GetWallpaper());
 	}
 

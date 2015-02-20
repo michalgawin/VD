@@ -166,15 +166,17 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 /* Main Window Procedures */
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static pCDesktopsManager s_pDskMgr;	// Struct keeps data for each desktop
+	static CRegistry* s_pRegistry = NULL;
+	static CPlugin* s_pPlugin = NULL;
+	static CTray* s_pTray = NULL;
+
 	static CRITICAL_SECTION s_criticalSection;
 	static HINSTANCE s_hInstance;	// instance to program
-	static pCDesktopsManager s_pDskMgr;	// Struct keeps data for each desktop
 	static HMODULE s_hSharedLib = NULL;	// handle to instance of shared dll
 	static BOOL s_bAlwaysOnTop = TRUE;	// hold status of check field "Always on top"
-	static CTray* s_Tray = NULL;
-	static CRegistry* s_Registry = NULL;
-	static CPlugin* s_Plugin = NULL;
 	static TCHAR s_szWallValOrg[MAX_PATH];	// hold orginal desktop wallpaper
+
 	TCHAR szWallNameTemplate[] = TEXT("Wallpaper#%d");	// wallpaper registry entry name template
 
 	switch (uMsg)
@@ -202,12 +204,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					  memset(s_szWallValOrg, 0, _countof(s_szWallValOrg)*sizeof(TCHAR));
 					  SystemParametersInfo(SPI_GETDESKWALLPAPER, _countof(s_szWallValOrg), s_szWallValOrg, 0);
 
-					  s_Plugin = new CPlugin();
-					  s_Registry = new CRegistry(SZ_VD_MAIN_KEY);
+					  s_pPlugin = new CPlugin();
+					  s_pRegistry = new CRegistry(SZ_VD_MAIN_KEY);
 
-					  if (!s_Registry->Exists())	// create entry in registry
+					  if (!s_pRegistry->Exists())	// create entry in registry
 					  {
-						  s_Registry->Create();
+						  s_pRegistry->Create();
 
 						  for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
 						  {
@@ -222,14 +224,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							  if (SystemParametersInfo(SPI_GETDESKWALLPAPER, _countof(szWallpaperValue), szWallpaperValue, 0))
 							  {
 								  (*s_pDskMgr)[i]->SetWallpaper(szWallpaperValue);
-								  s_Registry->Set(szWallpaperName, (VOID*)(*s_pDskMgr)[i]->GetWallpaper(), _tcslen((*s_pDskMgr)[i]->GetWallpaper()));
+								  s_pRegistry->Set(szWallpaperName, (VOID*)(*s_pDskMgr)[i]->GetWallpaper(), _tcslen((*s_pDskMgr)[i]->GetWallpaper()));
 							  }
 						  }
 
-						  s_Registry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)SZ_DEFAULT_PLUGIN_NAME, _tcslen(SZ_DEFAULT_PLUGIN_NAME));
-						  s_Plugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);	// Set plugin path
+						  s_pRegistry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)SZ_DEFAULT_PLUGIN_NAME, _tcslen(SZ_DEFAULT_PLUGIN_NAME));
+						  s_pPlugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);	// Set plugin path
 
-						  if (!s_Registry->Exists(SZ_VD_PLUGIN_PATH_KEY)) s_Registry->Create(SZ_VD_PLUGIN_PATH_KEY);
+						  if (!s_pRegistry->Exists(SZ_VD_PLUGIN_PATH_KEY)) s_pRegistry->Create(SZ_VD_PLUGIN_PATH_KEY);
 					  }
 					  else	// configuration already exists in registry 
 					  {
@@ -243,7 +245,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							  memset(szWallpaperValue, 0, sizeof (szWallpaperValue));
 							  _stprintf(szWallpaperValue, szWallNameTemplate, i);
 
-							  if (!s_Registry->Get(szWallpaperName, szWallpaperValue, MAX_PATH))
+							  if (!s_pRegistry->Get(szWallpaperName, szWallpaperValue, MAX_PATH))
 							  {
 								  SystemParametersInfo(SPI_GETDESKWALLPAPER, _countof(szWallpaperValue), szWallpaperValue, 0);
 							  }
@@ -253,8 +255,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  TCHAR szLibFullPath[MAX_PATH];
 						  memset(szLibFullPath, 0, sizeof (TCHAR)*_countof(szLibFullPath));
 
-						  if (s_Registry->Get(SZ_VD_PLUGIN_PATH_KEY, szLibFullPath, _countof(szLibFullPath))) s_Plugin->SetFile(szLibFullPath);	// Set plugin path
-						  else s_Plugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);
+						  if (s_pRegistry->Get(SZ_VD_PLUGIN_PATH_KEY, szLibFullPath, _countof(szLibFullPath))) s_pPlugin->SetFile(szLibFullPath);	// Set plugin path
+						  else s_pPlugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);
 
 						  if (_tcslen((*s_pDskMgr)[GetCurrentDesktop()]->GetWallpaper()) > 0)
 						  {
@@ -262,7 +264,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  }
 					  }
 
-					  if (!s_Plugin->Load())	// load GUI plugin
+					  if (!s_pPlugin->Load())	// load GUI plugin
 					  {
 						  TCHAR szAppName[MAX_PATH];
 						  LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
@@ -275,8 +277,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  MessageBox(NULL, szMessage, szAppName, MB_OK);
 					  }
 
-					  s_Tray = new CTray(hwnd, s_hInstance, LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON)));
-					  s_Tray->Show();
+					  s_pTray = new CTray(hwnd, s_hInstance, LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON)));
+					  s_pTray->Show();
 
 					  return 0;
 	}
@@ -290,7 +292,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						 {
 						 case WM_LBUTTONDOWN:
 						 {
-												HWND hDlg = s_Plugin->m_pfMakeDialog(hwnd, s_hSharedLib);
+												HWND hDlg = s_pPlugin->m_pfMakeDialog(hwnd, s_hSharedLib);
 												break;
 						 }
 						 case WM_RBUTTONDOWN:
@@ -356,13 +358,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen((*s_pDskMgr)[lParam]->GetWallpaper()), (*s_pDskMgr)[lParam]->GetWallpaper(), 0);
 									(*s_pDskMgr)[GetCurrentDesktop()]->HideWindows(hwnd, TRUE);
 									// WARNING!!! Work only if icons in resources are in ascending sequence!
-									s_Tray->ChangeIcon(LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
+									s_pTray->ChangeIcon(LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
 
 									SetCurrentDesktop(lParam);
 
 									(*s_pDskMgr)[GetCurrentDesktop()]->ShowWindows();
-									if (s_bAlwaysOnTop) s_Plugin->m_pfMakeDialog(hwnd, s_hSharedLib);
-									else s_Plugin->m_pfCloseDialog();
+									if (s_bAlwaysOnTop) s_pPlugin->m_pfMakeDialog(hwnd, s_hSharedLib);
+									else s_pPlugin->m_pfCloseDialog();
 								}
 								else ret = ERR_DESKTOP_NUM;
 
@@ -397,7 +399,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   }
 					   case CMD_PLUGIN:
 					   {
-										  DialogBoxParam(s_hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc, (LPARAM)s_Plugin);
+										  DialogBoxParam(s_hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc, (LPARAM)s_pPlugin);
 										  //DialogBox(hInstance, MAKEINTRESOURCE(IDD_SELECT_PLUGIN), hwnd, DlgPluginProc);
 										  break;
 					   }
@@ -441,12 +443,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						   memset(szWallpaperName, 0, sizeof (szWallpaperName));
 						   _stprintf(szWallpaperName, szWallNameTemplate, i);
 
-						   s_Registry->Set(szWallpaperName, (VOID*)(*s_pDskMgr)[i]->GetWallpaper(), _tcslen((*s_pDskMgr)[i]->GetWallpaper()));
+						   s_pRegistry->Set(szWallpaperName, (VOID*)(*s_pDskMgr)[i]->GetWallpaper(), _tcslen((*s_pDskMgr)[i]->GetWallpaper()));
 					   }
 					   //Save plugin path in registry
-					   s_Registry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)s_Plugin->GetFile(), _tcslen(s_Plugin->GetFile()));
+					   s_pRegistry->Set(SZ_VD_PLUGIN_PATH_KEY, (VOID*)s_pPlugin->GetFile(), _tcslen(s_pPlugin->GetFile()));
 
-					   s_Tray->Hide();
+					   s_pTray->Hide();
 
 					   SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(s_szWallValOrg), s_szWallValOrg, 0);
 

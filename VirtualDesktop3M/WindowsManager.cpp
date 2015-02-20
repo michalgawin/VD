@@ -175,6 +175,100 @@ VOID DrawTree(HWND hTree, pCDesktopsManager pDskMgr)
 }
 
 
+VOID DragElement(HWND hDlg, HWND hTree, LPARAM lParam)
+{
+	HTREEITEM htiTarget;  // Handle to target item. 
+	TVHITTESTINFO tvht;   // Hit test information. 
+	POINT point;
+
+	point.x = GET_X_LPARAM(lParam);
+	point.y = GET_Y_LPARAM(lParam);
+	ClientToScreen(hDlg, &point);
+	ScreenToClient(hTree, &point);
+	ImageList_DragMove(point.x, point.y);
+
+	// Turn off the dragged image so the background can be refreshed.
+	ImageList_DragShowNolock(FALSE);
+
+	tvht.pt.x = point.x;
+	tvht.pt.y = point.y;
+	if ((htiTarget = TreeView_HitTest(hTree, &tvht)) != NULL)
+	{
+		TreeView_SelectDropTarget(hTree, htiTarget);
+	}
+	ImageList_DragShowNolock(TRUE);
+}
+
+
+VOID EndDragElement(HWND hTree, HTREEITEM htiDrag)
+{
+	HTREEITEM htiDest = NULL;  //refers to destination item
+	htiDest = TreeView_GetDropHilight(hTree);
+	if (htiDest != NULL)
+	{
+		HTREEITEM htiParent = TreeView_GetParent(hTree, htiDest);
+		if (htiParent)
+		{
+			htiDest = htiParent;
+		}
+
+		TVITEM		tvi;
+		TVINSERTSTRUCT	tvis;
+		TCHAR szBuffer[MAX_PATH];
+		memset(szBuffer, 0, sizeof(szBuffer));
+
+		tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_HANDLE;
+		tvi.pszText = szBuffer;
+		tvi.cchTextMax = sizeof (szBuffer) / sizeof (TCHAR);
+		tvi.hItem = htiDrag;
+
+		TreeView_GetItem(hTree, &tvi);
+
+		tvis.item = tvi;
+		tvis.hParent = htiDest;
+		tvis.hInsertAfter = TVI_SORT;
+		TreeView_InsertItem(hTree, &tvis);
+
+		TreeView_DeleteItem(hTree, htiDrag);
+	}
+	ImageList_EndDrag();
+	TreeView_SelectDropTarget(hTree, NULL);
+
+	ReleaseCapture();
+	ShowCursor(TRUE);
+}
+
+
+BOOL BeginDragElement(HWND hTree, HTREEITEM* htiDrag, LPARAM lParam)
+{
+	BOOL bDrag = FALSE;
+	HIMAGELIST himl;
+	RECT rcItem;
+
+	HTREEITEM htiParent = TreeView_GetParent(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem);
+	if (!htiParent)
+	{
+		*htiDrag = NULL;
+	}
+	else
+	{
+		himl = TreeView_CreateDragImage(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem);
+
+		TreeView_GetItemRect(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem, &rcItem, TRUE);
+
+		ImageList_BeginDrag(himl, 0, 0, 0);
+		ImageList_DragEnter(hTree, ((LPNMTREEVIEW)lParam)->ptDrag.x, ((LPNMTREEVIEW)lParam)->ptDrag.y);
+		ShowCursor(FALSE);
+		SetCapture(GetParent(hTree));
+		bDrag = TRUE;
+
+		*htiDrag = ((LPNMTREEVIEW)lParam)->itemNew.hItem;
+	}
+
+	return bDrag;
+}
+
+
 INT FindItem(HWND hTreeView, HWND hWindow, HTREEITEM htiParent = NULL)
 {
 	INT found = 0;
@@ -203,7 +297,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 {
 	static HINSTANCE hInstance;
 	static pCDesktopsManager s_pDskMgr = NULL;
-	static pCDesktopsManager s_pDskMgr_mod = NULL;
+	static pCDesktopsManager s_pDskMgrDraft = NULL;
 	static HWND	hTree = NULL;
 	static HWND hCopy = NULL;				//handle to window to copy
 	static BOOL bCut = FALSE;
@@ -217,12 +311,12 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	case WM_INITDIALOG:
 	{
 						  s_pDskMgr = (pCDesktopsManager)lParam;
-						  s_pDskMgr_mod = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
+						  s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
 						  {
-							  *(*s_pDskMgr_mod)[i] = *(*s_pDskMgr)[i];
+							  *(*s_pDskMgrDraft)[i] = *(*s_pDskMgr)[i];
 						  }
 
 						  TCHAR szWindowName[MAX_PATH];
@@ -230,33 +324,14 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 						  SetWindowText(hDlg, szWindowName);
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
-						  DrawTree(hTree, s_pDskMgr_mod);
+						  DrawTree(hTree, s_pDskMgrDraft);
 						  return TRUE;
 	}
 	case WM_MOUSEMOVE:
 	{
 						 if (bDragging)
 						 {
-							 HTREEITEM htiTarget;  // Handle to target item. 
-							 TVHITTESTINFO tvht;   // Hit test information. 
-							 POINT point;
-
-							 point.x = GET_X_LPARAM(lParam);
-							 point.y = GET_Y_LPARAM(lParam);
-							 ClientToScreen(hDlg, &point);
-							 ScreenToClient(hTree, &point);
-							 ImageList_DragMove(point.x, point.y);
-
-							 // Turn off the dragged image so the background can be refreshed.
-							 ImageList_DragShowNolock(FALSE);
-
-							 tvht.pt.x = point.x;
-							 tvht.pt.y = point.y;
-							 if ((htiTarget = TreeView_HitTest(hTree, &tvht)) != NULL)
-							 {
-								 TreeView_SelectDropTarget(hTree, htiTarget);
-							 }
-							 ImageList_DragShowNolock(TRUE);
+							 DragElement(hDlg, hTree, lParam);
 						 }
 						 return TRUE;
 	}
@@ -264,40 +339,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 						 if (bDragging)
 						 {
-							 HTREEITEM htiDest = NULL;  //refers to destination item
-							 htiDest = TreeView_GetDropHilight(hTree);
-							 if (htiDest != NULL)
-							 {
-								 HTREEITEM htiParent = TreeView_GetParent(hTree, htiDest);
-								 if (htiParent)
-								 {
-									 htiDest = htiParent;
-								 }
-
-								 TVITEM		tvi;
-								 TVINSERTSTRUCT	tvis;
-								 TCHAR szBuffer[MAX_PATH];
-								 memset(szBuffer, 0, sizeof(szBuffer));
-
-								 tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_HANDLE;
-								 tvi.pszText = szBuffer;
-								 tvi.cchTextMax = sizeof (szBuffer) / sizeof (TCHAR);
-								 tvi.hItem = htiDrag;
-
-								 TreeView_GetItem(hTree, &tvi);
-
-								 tvis.item = tvi;
-								 tvis.hParent = htiDest;
-								 tvis.hInsertAfter = TVI_SORT;
-								 TreeView_InsertItem(hTree, &tvis);
-
-								 TreeView_DeleteItem(hTree, htiDrag);
-							 }
-							 ImageList_EndDrag();
-							 TreeView_SelectDropTarget(hTree, NULL);
-
-							 ReleaseCapture();
-							 ShowCursor(TRUE);
+							 EndDragElement(hTree, htiDrag);
 							 bDragging = FALSE;
 						 }
 						 return TRUE;
@@ -413,7 +455,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														   TreeView_GetItem(hTree, &tvi);
 
 														   INT iDesktop = (INT)tvi.lParam;
-														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)((*s_pDskMgr_mod)[iDesktop]));
+														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)((*s_pDskMgrDraft)[iDesktop]));
 													   }
 												   }
 												   return TRUE;
@@ -426,7 +468,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 									int i;
 									for (i = 0, hCurrentRoot = TreeView_GetRoot(hTree); hCurrentRoot != NULL; hCurrentRoot = TreeView_GetNextItem(hTree, hCurrentRoot, TVGN_NEXT), i++)
 									{
-										(*s_pDskMgr)[i]->SetWallpaper((*s_pDskMgr_mod)[i]->GetWallpaper());
+										(*s_pDskMgr)[i]->SetWallpaper((*s_pDskMgrDraft)[i]->GetWallpaper());
 
 										(*s_pDskMgr)[i]->ClearApps();
 										for (HTREEITEM hCurrentChild = TreeView_GetChild(hTree, hCurrentRoot); hCurrentChild != NULL; hCurrentChild = TreeView_GetNextItem(hTree, hCurrentChild, TVGN_NEXT))
@@ -444,13 +486,13 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 										bRet = FALSE;
 									}
 
-									delete s_pDskMgr_mod;
+									delete s_pDskMgrDraft;
 									EndDialog(hDlg, bRet);
 									return TRUE;
 					   }
 					   case IDCANCEL:
 					   {
-										delete s_pDskMgr_mod;
+										delete s_pDskMgrDraft;
 										EndDialog(hDlg, FALSE);
 										return TRUE;
 					   }
@@ -482,28 +524,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 					  }
 					  case TVN_BEGINDRAG:
 					  {
-											HIMAGELIST himl;
-											RECT rcItem;
-
-											HTREEITEM htiParent = TreeView_GetParent(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem);
-											if (!htiParent)
-											{
-												htiDrag = NULL;
-											}
-											else
-											{
-												himl = TreeView_CreateDragImage(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem);
-
-												TreeView_GetItemRect(hTree, ((LPNMTREEVIEW)lParam)->itemNew.hItem, &rcItem, TRUE);
-
-												ImageList_BeginDrag(himl, 0, 0, 0);
-												ImageList_DragEnter(hTree, ((LPNMTREEVIEW)lParam)->ptDrag.x, ((LPNMTREEVIEW)lParam)->ptDrag.y);
-												ShowCursor(FALSE);
-												SetCapture(GetParent(hTree));
-												bDragging = TRUE;
-
-												htiDrag = ((LPNMTREEVIEW)lParam)->itemNew.hItem;
-											}
+											bDragging = BeginDragElement(hTree, &htiDrag, lParam);
 											return TRUE;
 					  }
 					  case TVN_SELCHANGED:
@@ -540,14 +561,14 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														BOOL status = ChangeDesktop(GetCurrentDesktop());	//update applications on current desktop
 														if (status)
 														{
-															delete s_pDskMgr_mod;
-															s_pDskMgr_mod = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
+															delete s_pDskMgrDraft;
+															s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 															for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
 															{
-																*(*s_pDskMgr_mod)[i] = *(*s_pDskMgr)[i];
+																*(*s_pDskMgrDraft)[i] = *(*s_pDskMgr)[i];
 															}
 
-															DrawTree(hTree, s_pDskMgr_mod);
+															DrawTree(hTree, s_pDskMgrDraft);
 														}
 														else return FALSE;
 														break;
