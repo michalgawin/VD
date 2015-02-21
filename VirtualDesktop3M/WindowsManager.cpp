@@ -130,7 +130,7 @@ VOID DrawTree(HWND hTree, pCDesktopsManager pDskMgr)
 		tvis.hParent = tvis.hInsertAfter = TVI_ROOT;
 		tvis.item = tvi;
 		HTREEITEM hItem = TreeView_InsertItem(hTree, &tvis);
-		t_vHWND vApps = (*pDskMgr)[i]->GetApps();
+		t_vHWND vApps = (*pDskMgr)[i].GetApps();
 		for (t_vHWNDItor itor = vApps.begin(); itor != vApps.end();)
 		{
 			if (!IsWindow(*itor))
@@ -314,10 +314,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 						  s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
-						  for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
-						  {
-							  *(*s_pDskMgrDraft)[i] = *(*s_pDskMgr)[i];
-						  }
+						  *s_pDskMgrDraft = *s_pDskMgr;
 
 						  TCHAR szWindowName[MAX_PATH];
 						  LoadString(hInstance, IDS_VD_MANAGER, (TCHAR*)szWindowName, sizeof (szWindowName) / sizeof (TCHAR));
@@ -455,7 +452,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														   TreeView_GetItem(hTree, &tvi);
 
 														   INT iDesktop = (INT)tvi.lParam;
-														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)((*s_pDskMgrDraft)[iDesktop]));
+														   DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_DIALOG_WALLPAPER), hDlg, DlgWallpaperProc, (LPARAM)&((*s_pDskMgrDraft)[iDesktop]));
 													   }
 												   }
 												   return TRUE;
@@ -468,16 +465,16 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 									int i;
 									for (i = 0, hCurrentRoot = TreeView_GetRoot(hTree); hCurrentRoot != NULL; hCurrentRoot = TreeView_GetNextItem(hTree, hCurrentRoot, TVGN_NEXT), i++)
 									{
-										(*s_pDskMgr)[i]->SetWallpaper((*s_pDskMgrDraft)[i]->GetWallpaper());
+										(*s_pDskMgr)[i].SetWallpaper((*s_pDskMgrDraft)[i].GetWallpaper());
 
-										(*s_pDskMgr)[i]->ClearApps();
+										(*s_pDskMgr)[i].ClearApps();
 										for (HTREEITEM hCurrentChild = TreeView_GetChild(hTree, hCurrentRoot); hCurrentChild != NULL; hCurrentChild = TreeView_GetNextItem(hTree, hCurrentChild, TVGN_NEXT))
 										{
 											TVITEM tvi;
 											tvi.mask = TVIF_HANDLE;
 											tvi.hItem = hCurrentChild;
 											TreeView_GetItem(hTree, &tvi);
-											(*s_pDskMgr)[i]->AddApp((HWND)tvi.lParam);
+											(*s_pDskMgr)[i].AddApp((HWND)tvi.lParam);
 										}
 									}
 
@@ -563,10 +560,8 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														{
 															delete s_pDskMgrDraft;
 															s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
-															for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
-															{
-																*(*s_pDskMgrDraft)[i] = *(*s_pDskMgr)[i];
-															}
+
+															*s_pDskMgrDraft = *s_pDskMgr;
 
 															DrawTree(hTree, s_pDskMgrDraft);
 														}

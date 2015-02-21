@@ -15,19 +15,25 @@ typedef t_vHWND::const_iterator t_const_vHWNDItor;
 
 class CDesktop
 {
-	t_vHWND m_vApp;
+	t_vHWND m_vApps;
 	TCHAR* m_szWallpaper;
 
 public:
 	CDesktop();
 	CDesktop(CDesktop& org);
 	~CDesktop();
+
 	CDesktop& operator=(CDesktop& right);
+	CDesktop& operator+(CDesktop& right);
+	CDesktop& operator+(HWND hApp) { AddApp(hApp); return *this; }
+
 	void SetWallpaper(TCHAR* szWallpaper);
 	TCHAR* GetWallpaper() { return m_szWallpaper; }
-	void AddApp(HWND hApp) { m_vApp.push_back(hApp); }
-	t_vHWND GetApps() { return m_vApp; }
-	void ClearApps() { m_vApp.clear(); }
+
+	void AddApp(HWND hApp) { m_vApps.push_back(hApp); }
+	t_vHWND& GetApps() { return m_vApps; }
+	void ClearApps() { m_vApps.clear(); }
+
 	static HWND FindApplication(const TCHAR const * clsName);
 
 	/**
@@ -54,21 +60,22 @@ public:
 
 typedef CDesktop* pCDesktop;
 
-typedef std::vector<pCDesktop> t_vpCDesktop;
-typedef t_vpCDesktop::iterator t_vpCDesktopItor;
-typedef t_vpCDesktop::const_iterator t_const_vpCDesktopItor;
+typedef std::vector<CDesktop> t_vCDesktop;
+typedef t_vCDesktop::iterator t_vpCDesktopItor;
+typedef t_vCDesktop::const_iterator t_const_vpCDesktopItor;
 
 class CDesktopsManager
 {
-	t_vpCDesktop m_vpDesktop;
+	t_vCDesktop m_vDesktops;
 
 public:
 	CDesktopsManager(int nDesktops);
+	CDesktopsManager(CDesktopsManager& org);
 	~CDesktopsManager();
-	INT GetDesktopsNumber() { return m_vpDesktop.size(); }
+	INT GetDesktopsNumber() { return m_vDesktops.size(); }
 	BOOL AddDesktop();
 	BOOL RemoveDesktop(int nDesktop);
-	pCDesktop operator[](INT nDesktop);
+	CDesktop& operator[](INT nDesktop) throw(std::range_error);
 };
 
 typedef CDesktopsManager* pCDesktopsManager;
