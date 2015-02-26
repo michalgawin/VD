@@ -90,7 +90,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	WNDCLASS wndclass;
 	memset(&wndclass, 0, sizeof (WNDCLASS));
 
-	if (CDesktop::FindApplication(szClassName))
+	if (FindApplication(szClassName))
 	{
 		TCHAR szAppName[MAX_PATH];
 		LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
@@ -355,13 +355,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 								if ((lParam >= 0) && (lParam < s_pDskMgr->GetDesktopsNumber()))
 								{
 									SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen((*s_pDskMgr)[lParam].GetWallpaper()), (*s_pDskMgr)[lParam].GetWallpaper(), 0);
-									(*s_pDskMgr)[GetCurrentDesktop()].HideWindows(hwnd, TRUE);
+									(*s_pDskMgr)[GetCurrentDesktop()].HideApps(hwnd, TRUE);
 									// WARNING!!! Work only if icons in resources are in ascending sequence!
 									s_pTray->ChangeIcon(LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
 
 									SetCurrentDesktop(lParam);
 
-									(*s_pDskMgr)[GetCurrentDesktop()].ShowWindows();
+									(*s_pDskMgr)[GetCurrentDesktop()].ShowApps();
 									if (s_bAlwaysOnTop) s_pPlugin->m_pfMakeDialog(hwnd, s_hSharedLib);
 									else s_pPlugin->m_pfCloseDialog();
 								}
@@ -382,7 +382,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   }
 					   case CMD_DSKMGR:
 					   {
-										  (*s_pDskMgr)[GetCurrentDesktop()].GetWindowsFromDesktop(hwnd);
+										  (*s_pDskMgr)[GetCurrentDesktop()].GetAppsFromDesktop(hwnd);
 
 										  CDesktop AppMgr;
 										  AppMgr.SetWallpaper((*s_pDskMgr)[GetCurrentDesktop()].GetWallpaper());
@@ -390,8 +390,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 										  if (DialogBoxParam(s_hInstance, MAKEINTRESOURCE(IDD_DESKTOP_MANAGER), hwnd, DlgDesktopManagerProc, (LPARAM)s_pDskMgr))
 										  {
-											  AppMgr.HideWindows(hwnd, FALSE);
-											  (*s_pDskMgr)[GetCurrentDesktop()].ShowWindows();
+											  AppMgr.HideApps(hwnd, FALSE);
+											  (*s_pDskMgr)[GetCurrentDesktop()].ShowApps();
 											  SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen((*s_pDskMgr)[GetCurrentDesktop()].GetWallpaper()), (*s_pDskMgr)[GetCurrentDesktop()].GetWallpaper(), 0);
 										  }
 										  break;
@@ -451,13 +451,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					   SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen(s_szWallValOrg), s_szWallValOrg, 0);
 
-					   for (int i = 0; i < s_pDskMgr->GetDesktopsNumber(); i++)
+					   for (int i = s_pDskMgr->GetDesktopsNumber()-1; i >= 0; i--)
 					   {
 						   SetCurrentDesktop(i);
-						   (*s_pDskMgr)[GetCurrentDesktop()].ShowWindows();
+						   (*s_pDskMgr)[i].ShowApps();
+						   s_pDskMgr->RemoveDesktop(i);
 					   }
 
-					   SetCurrentDesktop(0);
 					   FreeLibrary(s_hSharedLib);
 					   DeleteCriticalSection(&s_criticalSection);
 

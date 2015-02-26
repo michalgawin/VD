@@ -65,7 +65,7 @@ IDI_ICON0               ICON                    "icon0.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,1,22
+ FILEVERSION 0,0,1,23
  PRODUCTVERSION 0,1,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -84,7 +84,7 @@ BEGIN
             VALUE "Comments", "v0.1"
             VALUE "CompanyName", "https://github.com/michalgawin"
             VALUE "FileDescription", "VirtualDesktop"
-            VALUE "FileVersion", "0.0.1.22"
+            VALUE "FileVersion", "0.0.1.23"
             VALUE "InternalName", "Virtual Desktop"
             VALUE "LegalCopyright", "Copyright © 2008"
             VALUE "OriginalFilename", "VirtualDesktop.exe"

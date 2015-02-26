@@ -71,7 +71,7 @@ CDesktop::~CDesktop()
 }
 
 
-CDesktop& CDesktop::operator = (CDesktop& right)
+CDesktop& CDesktop::operator=(CDesktop& right)
 {
 	if (this != &right)
 	{
@@ -84,12 +84,9 @@ CDesktop& CDesktop::operator = (CDesktop& right)
 }
 
 
-CDesktop& CDesktop::operator+(CDesktop& right)
+CDesktop& CDesktop::operator+=(CDesktop& right)
 {
-	t_vHWND apps(m_vApps.size() + right.m_vApps.size());
-	std::merge(m_vApps.begin(), m_vApps.end(), right.m_vApps.begin(), right.m_vApps.end(), apps.begin());
-	m_vApps = apps;
-
+	m_vApps.insert(m_vApps.end(), right.m_vApps.begin(), right.m_vApps.end());
 	return *this;
 }
 
@@ -105,13 +102,7 @@ void CDesktop::SetWallpaper(TCHAR* szWallpaper)
 }
 
 
-HWND CDesktop::FindApplication(const TCHAR const * clsName)
-{
-	return FindWindowEx(NULL, NULL, clsName, NULL);
-}
-
-
-INT CDesktop::GetWindowsFromDesktop(HWND hApp)
+INT CDesktop::GetAppsFromDesktop(HWND hApp)
 {
 	HWND hDesktop = GetDesktopWindow();
 	HWND hTaskBar = FindWindowEx(NULL, NULL, TEXT("Shell_TrayWnd"), NULL);
@@ -121,7 +112,10 @@ INT CDesktop::GetWindowsFromDesktop(HWND hApp)
 
 	for (HWND hWindowTop = GetTopWindow(hDesktop); hWindowTop; hWindowTop = GetWindow(hWindowTop, GW_HWNDNEXT))
 	{
-		if (IsWindowVisible(hWindowTop) && GetParent(hWindowTop) != hApp && hWindowTop != hTaskBar && hWindowTop != hDesktop && hWindowTop != hDesktopIcon && hWindowTop != hApp && GetParent(hWindowTop) != hTaskBar)
+		if (IsWindowVisible(hWindowTop) &&
+			(hWindowTop != hApp && GetParent(hWindowTop) != hApp && GetParent(GetParent(hWindowTop)) != hApp) &&
+			hWindowTop != hDesktop && hWindowTop != hTaskBar && hWindowTop != hDesktopIcon &&
+			GetParent(hWindowTop) != hTaskBar)
 			m_vApps.push_back(hWindowTop);
 	}
 
@@ -129,9 +123,9 @@ INT CDesktop::GetWindowsFromDesktop(HWND hApp)
 }
 
 
-INT CDesktop::HideWindows(HWND hApp, BOOL update)
+INT CDesktop::HideApps(HWND hApp, BOOL update)
 {
-	if (update) GetWindowsFromDesktop(hApp);
+	if (update) GetAppsFromDesktop(hApp);
 
 	HDWP s = BeginDeferWindowPos(m_vApps.size());
 	for (t_vHWNDItor itor = m_vApps.begin(); itor != m_vApps.end(); itor++)
@@ -144,7 +138,7 @@ INT CDesktop::HideWindows(HWND hApp, BOOL update)
 }
 
 
-INT CDesktop::ShowWindows()
+INT CDesktop::ShowApps()
 {
 	for (t_vHWNDItor itor = m_vApps.begin(); itor != m_vApps.end();)
 	{
@@ -165,4 +159,10 @@ INT CDesktop::ShowWindows()
 	EndDeferWindowPos(s);
 
 	return m_vApps.size();
+}
+
+
+HWND FindApplication(const TCHAR const * clsName)
+{
+	return FindWindowEx(NULL, NULL, clsName, NULL);
 }

@@ -24,42 +24,39 @@ public:
 	~CDesktop();
 
 	CDesktop& operator=(CDesktop& right);
-	CDesktop& operator+(CDesktop& right);
-	CDesktop& operator+(HWND hApp) { AddApp(hApp); return *this; }
+	CDesktop& operator+=(CDesktop& right);
+	CDesktop& operator+=(HWND hApp) { AddApp(hApp); return *this; }
 
 	void SetWallpaper(TCHAR* szWallpaper);
 	TCHAR* GetWallpaper() { return m_szWallpaper; }
 
-	void AddApp(HWND hApp) { m_vApps.push_back(hApp); }
+	void AddApp(HWND hApp) { if (IsWindow(hApp)) m_vApps.push_back(hApp); }
 	t_vHWND& GetApps() { return m_vApps; }
 	void ClearApps() { m_vApps.clear(); }
-
-	static HWND FindApplication(const TCHAR const * clsName);
 
 	/**
 	 * Function get all windows from desktop
 	 * @return number of applications
 	 * @param hApp handle to this application window
 	 */
-	INT GetWindowsFromDesktop (HWND hApp);
-
+	INT GetAppsFromDesktop(HWND hApp);
 	/**
-	 * Function hide windows
-	 * @return number of hidden applications
-	 * @param hApp handle to this application window
-	 * @param update TRUE to update list of applications, FALSE otherwise
-	 */
-	INT HideWindows (HWND hApp, BOOL update);
-
+	* Function hide windows
+	* @return number of hidden applications
+	* @param hApp handle to this application window
+	* @param update TRUE to update list of applications, FALSE otherwise
+	*/
+	INT HideApps(HWND hApp, BOOL update);
 	/**
 	 * Function show windows
 	 * @return number of showed applications
 	 */
-	INT ShowWindows ();
+	INT ShowApps();
 };
 
-typedef CDesktop* pCDesktop;
+HWND FindApplication(const TCHAR const * clsName);
 
+typedef CDesktop* pCDesktop;
 typedef std::vector<CDesktop> t_vCDesktop;
 typedef t_vCDesktop::iterator t_vpCDesktopItor;
 typedef t_vCDesktop::const_iterator t_const_vpCDesktopItor;
