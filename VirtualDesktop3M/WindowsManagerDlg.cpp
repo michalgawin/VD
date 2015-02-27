@@ -9,8 +9,8 @@
 #include <Commctrl.h>
 
 #include "DesktopMgr\DesktopMgr.h"
-#include "WindowsManager.h"
-#include "Wallpaper.h"
+#include "WindowsManagerDlg.h"
+#include "WallpaperDlg.h"
 #include "DesktopsManager.h"
 
 

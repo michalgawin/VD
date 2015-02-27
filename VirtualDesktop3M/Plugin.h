@@ -32,10 +32,5 @@ private:
 	BOOL GetFunc(IN const char* szFuncName, OUT VOID** pFun);
 };
 
-/**
-* Dialog window proc
-*/
-BOOL CALLBACK DlgPluginProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
 
 #endif //_PLUGIN_H_VD_

@@ -3,7 +3,7 @@
 */
 
 
-#include "Wallpaper.h"
+#include "WallpaperDlg.h"
 #include "DesktopsManager.h"
 
 

@@ -10,8 +10,8 @@
 #include "Tray.h"
 #include "DesktopsManager.h"
 
-// Plugins
-#include "WindowsManager.h"
+#include "WindowsManagerDlg.h"
+#include "PluginDlg.h"
 #include "Plugin.h"
 #include "About.h"
 

@@ -139,6 +139,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="PluginDlg.cpp" />
     <ClCompile Include="Registry.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -163,11 +164,11 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="Wallpaper.cpp">
+    <ClCompile Include="WallpaperDlg.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="WindowsManager.cpp">
+    <ClCompile Include="WindowsManagerDlg.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -185,13 +186,14 @@
   <ItemGroup>
     <ClInclude Include="About.h" />
     <ClInclude Include="Plugin.h" />
+    <ClInclude Include="PluginDlg.h" />
     <ClInclude Include="Registry.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Sys.h" />
     <ClInclude Include="Tray.h" />
     <ClInclude Include="VirtualDesktop.h" />
-    <ClInclude Include="Wallpaper.h" />
-    <ClInclude Include="WindowsManager.h" />
+    <ClInclude Include="WallpaperDlg.h" />
+    <ClInclude Include="WindowsManagerDlg.h" />
     <ClInclude Include="WndAttr.h" />
     <ClInclude Include="DesktopsManager.h" />
   </ItemGroup>
