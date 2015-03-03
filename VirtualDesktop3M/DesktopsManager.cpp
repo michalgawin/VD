@@ -13,7 +13,7 @@ CDesktopsManager::CDesktopsManager(int nDesktops)
 }
 
 
-CDesktopsManager::CDesktopsManager(CDesktopsManager& org)
+CDesktopsManager::CDesktopsManager(const CDesktopsManager& org)
 {
 	m_vDesktops.resize(org.m_vDesktops.size());
 	std::copy(org.m_vDesktops.begin(), org.m_vDesktops.end(), m_vDesktops.begin());
@@ -54,10 +54,11 @@ CDesktop::CDesktop() : m_szWallpaper(NULL)
 }
 
 
-CDesktop::CDesktop(CDesktop& org)
+CDesktop::CDesktop(const CDesktop& org)
 {
 	m_vApps.resize(org.m_vApps.size());
 	std::copy_if(org.m_vApps.begin(), org.m_vApps.end(), m_vApps.begin(), IsWindow);
+	m_szWallpaper = NULL;
 	SetWallpaper(org.GetWallpaper());
 }
 
@@ -71,7 +72,7 @@ CDesktop::~CDesktop()
 }
 
 
-CDesktop& CDesktop::operator=(CDesktop& right)
+CDesktop& CDesktop::operator=(const CDesktop& right)
 {
 	if (this != &right)
 	{
@@ -96,9 +97,12 @@ void CDesktop::SetWallpaper(TCHAR* szWallpaper)
 	if (m_szWallpaper) delete[] m_szWallpaper;
 	m_szWallpaper = NULL;
 
-	INT iLen = _tcslen(szWallpaper) + 1;
-	m_szWallpaper = new TCHAR[iLen];
-	_tcscpy_s(m_szWallpaper, iLen, szWallpaper);
+	if (szWallpaper)
+	{
+		INT iLen = _tcslen(szWallpaper) + 1;
+		m_szWallpaper = new TCHAR[iLen];
+		_tcscpy_s(m_szWallpaper, iLen, szWallpaper);
+	}
 }
 
 

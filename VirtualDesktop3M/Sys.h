@@ -7,6 +7,12 @@
 #define _SYS_H_VD_
 
 
+#include <Windows.h>
+
+
+void ShowErr(HINSTANCE hInst, UINT idsCaption, UINT idsText, ...);
+
+
 /** Desktop manager */
 #define SZ_DESKTOP_MGR		TEXT("DesktopMgr.dll")
 

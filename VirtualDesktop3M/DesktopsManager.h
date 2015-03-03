@@ -20,15 +20,15 @@ class CDesktop
 
 public:
 	CDesktop();
-	CDesktop(CDesktop& org);
+	CDesktop(const CDesktop& org);
 	~CDesktop();
 
-	CDesktop& operator=(CDesktop& right);
+	CDesktop& operator=(const CDesktop& right);
 	CDesktop& operator+=(CDesktop& right);
 	CDesktop& operator+=(HWND hApp) { AddApp(hApp); return *this; }
 
 	void SetWallpaper(TCHAR* szWallpaper);
-	TCHAR* GetWallpaper() { return m_szWallpaper; }
+	TCHAR* GetWallpaper() const { return m_szWallpaper; }
 
 	void AddApp(HWND hApp) { if (IsWindow(hApp)) m_vApps.push_back(hApp); }
 	t_vHWND& GetApps() { return m_vApps; }
@@ -67,7 +67,7 @@ class CDesktopsManager
 
 public:
 	CDesktopsManager(int nDesktops);
-	CDesktopsManager(CDesktopsManager& org);
+	CDesktopsManager(const CDesktopsManager& org);
 	~CDesktopsManager();
 	INT GetDesktopsNumber() { return m_vDesktops.size(); }
 	BOOL AddDesktop();

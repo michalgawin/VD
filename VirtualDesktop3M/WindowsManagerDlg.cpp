@@ -12,6 +12,7 @@
 #include "WindowsManagerDlg.h"
 #include "WallpaperDlg.h"
 #include "DesktopsManager.h"
+#include "CriticalSection.h"
 
 
 VOID ShowPopupMenu(POINT point, HWND hwnd, BOOL copy, BOOL cut, BOOL paste, BOOL del)
@@ -310,11 +311,15 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	{
 	case WM_INITDIALOG:
 	{
+						  CCriticalSection CriticalSection;
+
 						  s_pDskMgr = (pCDesktopsManager)lParam;
 						  s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
-						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
-
 						  *s_pDskMgrDraft = *s_pDskMgr;
+
+						  CriticalSection.~CriticalSection();
+
+						  hInstance = (HINSTANCE)GetWindowLong(hDlg, GWL_HINSTANCE);
 
 						  TCHAR szWindowName[MAX_PATH];
 						  LoadString(hInstance, IDS_VD_MANAGER, (TCHAR*)szWindowName, sizeof (szWindowName) / sizeof (TCHAR));
@@ -322,6 +327,7 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 						  hTree = GetDlgItem(hDlg, IDC_TREE);
 						  DrawTree(hTree, s_pDskMgrDraft);
+
 						  return TRUE;
 	}
 	case WM_MOUSEMOVE:
@@ -459,6 +465,8 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 					   }
 					   case IDOK:
 					   {
+									CCriticalSection CriticalSection;
+
 									BOOL bRet = TRUE;
 
 									HTREEITEM hCurrentRoot;
@@ -482,6 +490,8 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 									{
 										bRet = FALSE;
 									}
+
+									CriticalSection.~CCriticalSection();
 
 									delete s_pDskMgrDraft;
 									EndDialog(hDlg, bRet);
@@ -559,9 +569,13 @@ BOOL CALLBACK DlgDesktopManagerProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 														if (status)
 														{
 															delete s_pDskMgrDraft;
-															s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 
+															CCriticalSection CriticalSection;
+
+															s_pDskMgrDraft = new CDesktopsManager(s_pDskMgr->GetDesktopsNumber());
 															*s_pDskMgrDraft = *s_pDskMgr;
+
+															CriticalSection.~CCriticalSection();
 
 															DrawTree(hTree, s_pDskMgrDraft);
 														}

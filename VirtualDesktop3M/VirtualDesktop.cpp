@@ -9,6 +9,7 @@
 #include "Registry.h"
 #include "Tray.h"
 #include "DesktopsManager.h"
+#include "CriticalSection.h"
 
 #include "WindowsManagerDlg.h"
 #include "PluginDlg.h"
@@ -92,13 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	if (FindApplication(szClassName))
 	{
-		TCHAR szAppName[MAX_PATH];
-		LoadString(hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
-
-		TCHAR szAppLaunched[MAX_PATH];
-		LoadString(hInstance, IDS_APP_LAUNCHED, (TCHAR*)szAppLaunched, _countof(szAppLaunched));
-
-		MessageBox(NULL, szAppLaunched, szAppName, MB_OK);
+		ShowErr(hInstance, IDS_APP_NAME, IDS_APP_LAUNCHED);
 		return -1;
 	}
 
@@ -120,13 +115,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	if (!RegisterClass(&wndclass))
 	{
-		TCHAR szError[MAX_PATH];
-		LoadString(hInstance, IDS_ERROR, (TCHAR*)szError, _countof(szError));
-
-		TCHAR szNotSuppOS[MAX_PATH];
-		LoadString(hInstance, IDS_ERR_NOT_SUPPORTED_OS, (TCHAR*)szNotSuppOS, _countof(szNotSuppOS));
-
-		MessageBox(NULL, szError, szNotSuppOS, MB_OK | MB_ICONERROR);
+		ShowErr(hInstance, IDS_ERROR, IDS_ERR_NOT_SUPPORTED_OS);
 		return -1;
 	}
 
@@ -171,7 +160,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static CPlugin* s_pPlugin = NULL;
 	static CTray* s_pTray = NULL;
 
-	static CRITICAL_SECTION s_criticalSection;
 	static HINSTANCE s_hInstance;	// instance to program
 	static HMODULE s_hSharedLib = NULL;	// handle to instance of shared dll
 	static BOOL s_bAlwaysOnTop = TRUE;	// hold status of check field "Always on top"
@@ -183,21 +171,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 	{
-					  InitializeCriticalSection(&s_criticalSection);
+					  CCriticalSection::Init();
 
 					  s_hInstance = ((LPCREATESTRUCT)lParam)->hInstance;
 
 					  s_hSharedLib = LoadLibrary(SZ_DESKTOP_MGR);	// load shared library
-					  if (!s_hSharedLib)
-					  {
-						  TCHAR szAppName[MAX_PATH];
-						  LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
-
-						  TCHAR szErrDeskManager[MAX_PATH];
-						  LoadString(s_hInstance, IDS_ERR_NO_DESKTOP_MANAGER, (TCHAR*)szErrDeskManager, _countof(szErrDeskManager));
-
-						  MessageBox(NULL, szErrDeskManager, szAppName, MB_OK);
-					  }
+					  if (!s_hSharedLib) ShowErr(s_hInstance, IDS_APP_NAME, IDS_ERR_NO_DESKTOP_MANAGER);
 
 					  memset(s_szWallValOrg, 0, _countof(s_szWallValOrg)*sizeof(TCHAR));
 					  SystemParametersInfo(SPI_GETDESKWALLPAPER, _countof(s_szWallValOrg), s_szWallValOrg, 0);
@@ -254,7 +233,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  TCHAR szLibFullPath[MAX_PATH];
 						  memset(szLibFullPath, 0, sizeof (TCHAR)*_countof(szLibFullPath));
 
-						  if (s_pRegistry->Get(SZ_VD_PLUGIN_PATH_KEY, szLibFullPath, _countof(szLibFullPath))) s_pPlugin->SetFile(szLibFullPath);	// Set plugin path
+						  if (s_pRegistry->Get(SZ_VD_PLUGIN_PATH_KEY, szLibFullPath, _countof(szLibFullPath))) s_pPlugin->SetFile(szLibFullPath);
 						  else s_pPlugin->SetFile(SZ_DEFAULT_PLUGIN_NAME);
 
 						  if (_tcslen((*s_pDskMgr)[GetCurrentDesktop()].GetWallpaper()) > 0)
@@ -263,20 +242,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  }
 					  }
 
-					  if (!s_pPlugin->Load())	// load GUI plugin
-					  {
-						  TCHAR szAppName[MAX_PATH];
-						  LoadString(s_hInstance, IDS_APP_NAME, (TCHAR*)szAppName, _countof(szAppName));
+					  if (!s_pPlugin->Load()) ShowErr(s_hInstance, IDS_APP_NAME, IDS_ERR_NO_PLUGIN, GetLastError());
 
-						  TCHAR szNoPlugin[MAX_PATH];
-						  LoadString(s_hInstance, IDS_ERR_NO_PLUGIN, (TCHAR*)szNoPlugin, _countof(szNoPlugin));
-						  TCHAR szMessage[MAX_PATH];
-						  _stprintf(szMessage, szNoPlugin, GetLastError());
-
-						  MessageBox(NULL, szMessage, szAppName, MB_OK);
-					  }
-
-					  s_pTray = new CTray(hwnd, s_hInstance, LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON)));
+					  s_pTray = new CTray(hwnd, s_hInstance);
+					  s_pTray->ChangeIcon(TEXT("VD"));
 					  s_pTray->Show();
 
 					  return 0;
@@ -349,15 +318,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_CHANGE_DESKTOP:	// lParam - no. of desktop
 	{
-								EnterCriticalSection(&s_criticalSection);
-								INT ret = 0;
+								CCriticalSection CriticalSection;
 
-								if ((lParam >= 0) && (lParam < s_pDskMgr->GetDesktopsNumber()))
+								INT iRet = 0;
+
+								INT iDskMin = 0;
+								INT iDskMax = s_pDskMgr->GetDesktopsNumber();
+
+								if ((lParam >= iDskMin) && (lParam < iDskMax))
 								{
 									SystemParametersInfo(SPI_SETDESKWALLPAPER, _tcslen((*s_pDskMgr)[lParam].GetWallpaper()), (*s_pDskMgr)[lParam].GetWallpaper(), 0);
 									(*s_pDskMgr)[GetCurrentDesktop()].HideApps(hwnd, TRUE);
-									// WARNING!!! Work only if icons in resources are in ascending sequence!
-									s_pTray->ChangeIcon(LoadIcon(s_hInstance, MAKEINTRESOURCE(IDI_ICON + lParam)));
+									if (lParam == iDskMin) s_pTray->ChangeIcon(TEXT("VD"));
+									else s_pTray->ChangeIcon(TEXT("%d"), lParam);
 
 									SetCurrentDesktop(lParam);
 
@@ -365,11 +338,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 									if (s_bAlwaysOnTop) s_pPlugin->m_pfMakeDialog(hwnd, s_hSharedLib);
 									else s_pPlugin->m_pfCloseDialog();
 								}
-								else ret = ERR_DESKTOP_NUM;
+								else if (lParam == iDskMax)
+								{
+									s_pDskMgr->AddDesktop();
+									(*s_pDskMgr)[iDskMax].SetWallpaper(s_szWallValOrg);
+									s_pPlugin->m_pfCloseDialog();
+									s_pPlugin->m_pfMakeDialog(hwnd, s_hSharedLib);
+								}
+								else iRet = ERR_DESKTOP_NUM;
 
-								LeaveCriticalSection(&s_criticalSection);
+								CriticalSection.~CCriticalSection();
 
-								return ret;
+								return iRet;
 	}
 	case WM_COMMAND:
 	{
@@ -459,7 +439,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					   }
 
 					   FreeLibrary(s_hSharedLib);
-					   DeleteCriticalSection(&s_criticalSection);
+					   CCriticalSection::Leave();
 
 					   PostQuitMessage(0);
 					   return 0;

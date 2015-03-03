@@ -3,11 +3,6 @@
 // Used by VirtualDesktop.rc
 //
 #define IDI_ICON                        101
-#define IDI_ICON1                       102
-#define IDI_ICON2                       103
-#define IDI_ICON3                       104
-#define IDI_ICON4                       105
-#define IDI_ICON0                       106
 #define IDD_DIALOG_ABOUT                107
 #define IDD_DIALOG_TRANSPARENT          108
 #define IDD_DIALOG_WALLPAPER            109

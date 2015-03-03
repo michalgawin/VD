@@ -139,11 +139,13 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CriticalSection.cpp" />
     <ClCompile Include="PluginDlg.cpp" />
     <ClCompile Include="Registry.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="Sys.cpp" />
     <ClCompile Include="Tray.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -185,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="About.h" />
+    <ClInclude Include="CriticalSection.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="PluginDlg.h" />
     <ClInclude Include="Registry.h" />
@@ -199,12 +202,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="icon.ico" />
-    <None Include="icon0.ico" />
-    <None Include="icon1.ico" />
-    <None Include="icon2.ico" />
-    <None Include="icon3.ico" />
-    <None Include="icon4.ico" />
-    <None Include="icon5.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="DesktopMgr\DesktopMgr.vcxproj">

@@ -17,6 +17,7 @@
 #define BUTTON_ID0	10000	//id of first desktop-button
 #define DESKTOPS_ON_PAGE	5	//no. of desktop-buttons on page
 
+#define START_MENU_HEIGHT	30	// height of Start menu (for XP default size equal 30)
 
 /**
  * Creates GUI to change desktop.

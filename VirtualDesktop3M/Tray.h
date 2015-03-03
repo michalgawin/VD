@@ -6,8 +6,10 @@
 #ifndef _TRAY_H_VD_
 #define _TRAY_H_VD_
 
+#pragma comment(lib, "Msimg32.lib")
 
 #include "VirtualDesktop.h"
+#include <WinGdi.h>
 
 
 class CTray
@@ -22,7 +24,7 @@ public:
 	 * @param hInstance handle to instance of application
 	 * @param icon id of icon in application resources
 	 */
-	CTray (HWND hwnd, HINSTANCE hInstance, HICON icon);
+	CTray (HWND hwnd, HINSTANCE hInstance);
 
 	/**
 	 * Function show tray icon
@@ -41,9 +43,9 @@ public:
 	/**
 	 * Function modify tray icon
 	 * @return void
-	 * @param nid pointer on NOTIFYICONDATA structure
+	 * @param szFormat format of arguments
 	 */
-	VOID ChangeIcon (HICON);
+	VOID ChangeIcon(TCHAR* szFormat, ...);
 };
 
 

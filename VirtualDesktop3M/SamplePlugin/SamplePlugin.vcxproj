@@ -142,6 +142,8 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Sys.cpp" />
+    <ClCompile Include="DesktopButton.cpp" />
     <ClCompile Include="SamplePlugin.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -158,6 +160,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Sys.h" />
+    <ClInclude Include="DesktopButton.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SamplePlugin.h" />
     <ClInclude Include="..\WndAttr.h" />
